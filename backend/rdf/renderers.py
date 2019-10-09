@@ -24,10 +24,9 @@ class RDFLibRenderer(BaseRenderer):
         return graph.serialize(**self.rdflib_args)
 
 
-class JSONLD_Renderer(RDFLibRenderer):
-    media_type = 'application/ld+json'
-    format = 'jsonld'
+class TurtleRenderer(RDFLibRenderer):
+    media_type = 'text/turtle'
+    format = 'ttl'
     rdflib_args = {
-        'format': 'json-ld',
-        'indent': 4,
+        'format': 'turtle',
     }
