@@ -16,8 +16,8 @@ class RDFView(APIView):
     renderer_classes = (TurtleRenderer,)
     parser_classes = (JSONLDParser,)
 
-    def get(self, request, format=None):
-        return Response(self.get_graph(request))
+    def get(self, request, format=None, **kwargs):
+        return Response(self.get_graph(request, **kwargs))
 
-    def get_graph(self, request):
+    def get_graph(self, request, **kwargs):
         return self.graph
