@@ -2,13 +2,14 @@ from importlib import import_module
 
 from pytest import fixture
 
-from rdflib import Graph
+from rdflib import Graph, Literal
 
 from .ns import *
 
 TRIPLES = (
     (RDF.type, RDF.type, RDF.Property),
     (RDF.type, RDFS.range, RDFS.Class),
+    (RDF.type, RDFS.label, Literal('type')),
     (RDFS.range, RDFS.domain, RDF.Property),
     (RDFS.domain, RDFS.domain, RDF.Property),
 )
