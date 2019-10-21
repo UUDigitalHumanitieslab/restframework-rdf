@@ -44,8 +44,8 @@ class RDFView(APIView):
     """
     Expose a given graph as an RDF-encoded API endpoint.
 
-    Either set a static `graph` member or override `get_graph` to
-    compute the graph dynamically.
+    Either set a static `graph` member function or override
+    `get_graph` to compute the graph from the request.
 
     For now, only Turtle output and JSON-LD input is supported.
     """
@@ -56,7 +56,7 @@ class RDFView(APIView):
         return Response(self.get_graph(request, **kwargs))
 
     def get_graph(self, request, **kwargs):
-        return self.graph
+        return self.graph()
 
 
 class RDFResourceView(RDFView):
@@ -71,7 +71,7 @@ class RDFResourceView(RDFView):
     def get_graph(self, request, **kwargs):
         identifier = URIRef(self.get_resource_uri(request, **kwargs))
         result = Graph()
-        for triple in self.graph.triples((identifier, None, None)):
+        for triple in self.graph().triples((identifier, None, None)):
             result.add(triple)
         # TODO: also include related nodes
         return result

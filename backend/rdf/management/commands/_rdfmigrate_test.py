@@ -24,7 +24,7 @@ def test_migrate_package(app_with_rdf_migrations, app_without_rdf_migrations):
     command.migrate_package(app_with_rdf_migrations)
     fixture = import_module('.fixture', app_with_rdf_migrations)
     graph = import_module('.graph', app_with_rdf_migrations)
-    assert len(graph.graph ^ fixture.canonical_graph()) == 0
+    assert len(graph.graph() ^ fixture.canonical_graph()) == 0
     command.migrate_package(app_without_rdf_migrations)
     # We expect the above line to be a no-op.
     # It must not throw an exception.
