@@ -30,7 +30,7 @@ class Command(BaseCommand):
         try:
             graph = import_module('.graph', pkg_name)
             fixture = import_module('.fixture', pkg_name)
-            self.migrate_graph(graph.graph, fixture.canonical_graph())
+            self.migrate_graph(graph.graph(), fixture.canonical_graph())
             self.stdout.write('Applied RDF migrations for {}.'.format(pkg_name))
         except ImportError:
             # Nothing to do, this package has no RDF migrations.

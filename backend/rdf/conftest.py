@@ -39,7 +39,7 @@ def app_with_rdf_migrations():
     yield with_migrations.__name__
     # Make sure the graph is empty again after use
     graph = import_module('.graph', with_migrations.__name__)
-    g = graph.graph
+    g = graph.graph()
     for t in g:
         g.remove(t)
 

@@ -1,3 +1,6 @@
 from rdflib import Graph
 
-graph = Graph()
+_graph = Graph()
+
+def graph():
+    return _graph
