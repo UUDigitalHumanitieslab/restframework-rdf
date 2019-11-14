@@ -3,6 +3,7 @@
 from rdflib.namespace import Namespace, RDF, RDFS, OWL, XSD, FOAF, SKOS, DC, DCTERMS
 
 FRBR    = Namespace('http://purl.org/vocab/frbr/core#')
+CIDOC   = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
 OA      = Namespace('http://www.w3.org/ns/oa#')
 AS      = Namespace('http://www.w3.org/ns/activitystreams#')
 DCTYPES = Namespace('http://purl.org/dc/dcmitype/')
