@@ -1,6 +1,25 @@
 from rdflib import Graph, Literal
 
 
+def prune_triples(graph, triples):
+    """Remove all items in iterable `triples` from `graph` (modify in place)."""
+    for triple in triples:
+        graph.remove(triple)
+
+
+def append_triples(graph, triples):
+    """ Add all items in iterable `triples` to `graph` (modify in place). """
+    for triple in triples:
+        graph.add(triple)
+
+
+def graph_from_triples(triples):
+    """ Return a new Graph containing all items in iterable `triples`. """
+    graph = Graph()
+    append_triples(graph, triples)
+    return graph
+
+
 def traverse_forward(full_graph, fringe, plys):
     """
     Traverse `full_graph` by object `plys` times, starting from `fringe`.
@@ -17,8 +36,7 @@ def traverse_forward(full_graph, fringe, plys):
         fringe = Graph()
         for o in objects:
             if not isinstance(o, Literal):
-                for triple in full_graph.triples((o, None, None)):
-                    fringe.add(triple)
+                append_triples(fringe, full_graph.triples((o, None, None)))
         result |= fringe
         visited_objects |= objects
         plys -= 1
@@ -45,8 +63,7 @@ def traverse_backward(full_graph, fringe, plys):
         for s in subjects:
             parents = set(full_graph.subjects(None, s))
             for ss in parents - fringe_subjects:
-                for triple in full_graph.triples((ss, None, None)):
-                    fringe.add(triple)
+                append_triples(fringe, full_graph.triples((ss, None, None)))
             fringe_subjects |= parents
         result |= fringe
         visited_subjects |= subjects

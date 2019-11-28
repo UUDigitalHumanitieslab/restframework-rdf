@@ -4,6 +4,7 @@ from pytest import fixture
 
 from rdflib import Graph, Literal
 
+from rdf.utils import graph_from_triples, prune_triples
 from .ns import *
 
 TRIPLES = (
@@ -27,10 +28,7 @@ def empty_graph():
 
 @fixture
 def filled_graph(triples):
-    g = Graph()
-    for t in triples:
-        g.add(t)
-    return g
+    return graph_from_triples(triples)
 
 
 @fixture
@@ -40,8 +38,8 @@ def app_with_rdf_migrations():
     # Make sure the graph is empty again after use
     graph = import_module('.graph', with_migrations.__name__)
     g = graph.graph()
-    for t in g:
-        g.remove(t)
+    prune_triples(g, g)
+    assert len(g) == 0
 
 
 @fixture

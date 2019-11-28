@@ -7,6 +7,8 @@ from importlib import import_module
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from rdf.utils import append_triples, prune_triples
+
 
 class Command(BaseCommand):
     help = 'Performs RDF migrations for the specified app(s).'
@@ -46,9 +48,7 @@ class Command(BaseCommand):
         # TODO: compute subject nodes that weren't in `actual` before.
         # TODO: compute subject nodes that will disappear from `actual`.
         # Do the additions first in case we need to update referencing triples.
-        for addition in additions:
-            actual.add(addition)
+        append_triples(actual, additions)
         # TODO: insert post-add logic here
         # TODO: insert pre-delete logic here
-        for deletion in deletions:
-            actual.remove(deletion)
+        prune_triples(actual, deletions)
