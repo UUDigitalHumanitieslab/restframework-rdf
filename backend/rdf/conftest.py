@@ -2,10 +2,12 @@ from importlib import import_module
 
 from pytest import fixture
 
-from rdflib import Graph, Literal
+from rdflib import Graph, Literal, URIRef
 
 from rdf.utils import graph_from_triples, prune_triples
 from .ns import *
+
+MAGIC_NODE = URIRef('http://hogwarts.edu/')
 
 TRIPLES = (
     (RDF.type, RDF.type, RDF.Property),
@@ -13,6 +15,13 @@ TRIPLES = (
     (RDF.type, RDFS.label, Literal('type')),
     (RDFS.range, RDFS.domain, RDF.Property),
     (RDFS.domain, RDFS.domain, RDF.Property),
+    # following triples added for testing traversal
+    # note that these form a ring together with the triples above!
+    (RDF.Property, RDF.type, RDFS.Class),
+    (RDF.Property, RDFS.subClassOf, RDFS.Resource),
+    (RDFS.Resource, RDFS.isDefinedBy, MAGIC_NODE),
+    (MAGIC_NODE, RDF.type, RDF.Statement),
+    (MAGIC_NODE, RDF.object, RDF.type),
 )
 
 
