@@ -7,6 +7,7 @@ from rdflib import Graph, URIRef, BNode, Literal
 from rdf.ns import *
 from rdf.renderers import TurtleRenderer
 from rdf.parsers import JSONLDParser
+from rdf.utils import append_triples, graph_from_triples
 
 DOES_NOT_EXIST_404 = 'Resource does not exist.'
 HTTPSC_MAP = {
@@ -28,7 +29,7 @@ def error_response(request, status, message):
     data = graph_from_request(request)
     req = BNode()
     res = BNode()
-    for triple in (
+    append_triples(data, (
         (req, RDF.type, HTTP.Request),
         (req, HTTP.mthd, HTTPM[request.method]),
         (req, HTTP.resp, res),
@@ -36,7 +37,7 @@ def error_response(request, status, message):
         (res, HTTP.sc, HTTPSC_MAP[status]),
         (res, HTTP.statusCodeValue, Literal(status)),
         (res, HTTP.reasonPhrase, Literal(message)),
-    ): data.add(triple)
+    ))
     return Response(data, status=status)
 
 
@@ -70,9 +71,8 @@ class RDFResourceView(RDFView):
 
     def get_graph(self, request, **kwargs):
         identifier = URIRef(self.get_resource_uri(request, **kwargs))
-        result = Graph()
-        for triple in self.graph().triples((identifier, None, None)):
-            result.add(triple)
+        pattern = (identifier, None, None)
+        result = graph_from_triples(self.graph().triples(pattern))
         # TODO: also include related nodes
         return result
 

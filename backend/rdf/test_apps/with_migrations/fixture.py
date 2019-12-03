@@ -1,9 +1,7 @@
 from rdflib import Graph
 
 from rdf.conftest import TRIPLES
+from rdf.utils import graph_from_triples
 
 def canonical_graph():
-    g = Graph()
-    for t in TRIPLES:
-        g.add(t)
-    return g
+    return graph_from_triples(TRIPLES)

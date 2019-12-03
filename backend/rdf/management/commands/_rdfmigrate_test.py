@@ -16,6 +16,7 @@ from sys import stdout
 
 from rdflib import Graph
 
+from rdf.utils import graph_from_triples
 from .rdfmigrate import *
 
 
@@ -33,9 +34,7 @@ def test_migrate_package(app_with_rdf_migrations, app_without_rdf_migrations):
 
 def test_migrate_graph(empty_graph, filled_graph):
     command = Command()
-    backup = Graph()
-    for t in filled_graph:
-        backup.add(t)
+    backup = graph_from_triples(filled_graph)
     command.migrate_graph(empty_graph, filled_graph)
     assert len(filled_graph ^ backup) == 0
     assert len(empty_graph ^ backup) == 0
