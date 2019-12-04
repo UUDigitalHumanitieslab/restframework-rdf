@@ -63,6 +63,8 @@ def custom_exception_handler(error, context):
     override_data = graph_from_triples((
         (res, RDF.type, HTTP.Response),
         (res, HTTP.statusCodeValue, Literal(status)),
+        # TODO: ValidationError may contain a (nested) list or dict
+        # instead of a string. Handle this as a special case.
         (res, HTTP.reasonPhrase, Literal(original_data['detail'])),
     ))
     status_uri = HTTPSC_MAP.get(status)
