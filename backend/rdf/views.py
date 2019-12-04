@@ -29,22 +29,16 @@ def custom_exception_handler(error, context):
     response = exception_handler(error, context)
     if response is None:
         return response
-    request = context['request']
-    payload = graph_from_request(request)
     status = response.status_code
     original_data = response.data
-    req = BNode()
     res = BNode()
     override_data = graph_from_triples((
-        (req, RDF.type, HTTP.Request),
-        (req, HTTP.mthd, HTTPM[request.method]),
-        (req, HTTP.resp, res),
         (res, RDF.type, HTTP.Response),
         (res, HTTP.sc, HTTPSC_MAP[status]),
         (res, HTTP.statusCodeValue, Literal(status)),
         (res, HTTP.reasonPhrase, Literal(original_data['detail'])),
     ))
-    response.data = override_data | payload
+    response.data = override_data
     return response
 
 
