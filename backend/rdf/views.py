@@ -1,6 +1,7 @@
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.exceptions import NotFound
 
 from rdflib import Graph, URIRef, BNode, Literal
 
@@ -9,7 +10,6 @@ from rdf.renderers import TurtleRenderer
 from rdf.parsers import JSONLDParser
 from rdf.utils import append_triples, graph_from_triples
 
-DOES_NOT_EXIST_404 = 'Resource does not exist.'
 HTTPSC_MAP = {
     HTTP_400_BAD_REQUEST: HTTPSC.BadRequest,
     HTTP_404_NOT_FOUND: HTTPSC.NotFound,
@@ -24,21 +24,28 @@ def graph_from_request(request):
     return data
 
 
-def error_response(request, status, message):
-    """ Return an RDF-encoded 4xx page that includes any request data. """
-    data = graph_from_request(request)
+def custom_exception_handler(error, context):
+    """ Returns a Graph as data instead of JSON. """
+    response = exception_handler(error, context)
+    if response is None:
+        return response
+    request = context['request']
+    payload = graph_from_request(request)
+    status = response.status_code
+    original_data = response.data
     req = BNode()
     res = BNode()
-    append_triples(data, (
+    override_data = graph_from_triples((
         (req, RDF.type, HTTP.Request),
         (req, HTTP.mthd, HTTPM[request.method]),
         (req, HTTP.resp, res),
         (res, RDF.type, HTTP.Response),
         (res, HTTP.sc, HTTPSC_MAP[status]),
         (res, HTTP.statusCodeValue, Literal(status)),
-        (res, HTTP.reasonPhrase, Literal(message)),
+        (res, HTTP.reasonPhrase, Literal(original_data['detail'])),
     ))
-    return Response(data, status=status)
+    response.data = override_data | payload
+    return response
 
 
 class RDFView(APIView):
@@ -59,6 +66,9 @@ class RDFView(APIView):
     def get_graph(self, request, **kwargs):
         return self.graph()
 
+    def get_exception_handler(self):
+        return custom_exception_handler
+
 
 class RDFResourceView(RDFView):
     """ API endpoint for fetching individual subjects. """
@@ -66,7 +76,7 @@ class RDFResourceView(RDFView):
     def get(self, request, format=None, **kwargs):
         data = self.get_graph(request, **kwargs)
         if len(data) == 0:
-            return error_response(request, HTTP_404_NOT_FOUND, DOES_NOT_EXIST_404)
+            raise NotFound()
         return Response(data)
 
     def get_graph(self, request, **kwargs):
