@@ -53,7 +53,12 @@ def graph_from_request(request):
 
 
 def custom_exception_handler(error, context):
-    """ Returns a Graph as data instead of JSON. """
+    """
+    Returns a rest_framework Response with an rdflib Graph as .data.
+
+    Normally, a Response would have a JSON-serializable dict or list
+    as data.
+    """
     response = exception_handler(error, context)
     if response is None:
         return response
