@@ -45,8 +45,8 @@ class Command(BaseCommand):
         """ Update the `actual` graph to match `desired`. """
         additions = desired - actual
         deletions = actual - desired
-        # TODO: compute subject nodes that weren't in `actual` before.
-        # TODO: compute subject nodes that will disappear from `actual`.
+        subjects_added = set(additions.subjects())
+        subjects_deleted = set(deletions.subjects())
         # Do the additions first in case we need to update referencing triples.
         append_triples(actual, additions)
         # TODO: insert post-add logic here
