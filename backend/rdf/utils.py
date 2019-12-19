@@ -13,9 +13,9 @@ def append_triples(graph, triples):
         graph.add(triple)
 
 
-def graph_from_triples(triples):
+def graph_from_triples(triples, ctor=Graph):
     """ Return a new Graph containing all items in iterable `triples`. """
-    graph = Graph()
+    graph = ctor()
     append_triples(graph, triples)
     return graph
 
