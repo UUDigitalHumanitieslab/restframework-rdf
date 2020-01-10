@@ -11,6 +11,8 @@ SCHEMA  = Namespace('http://schema.org/')
 HTTP    = Namespace('http://www.w3.org/2011/http#')
 HTTPSC  = Namespace('https://www.w3.org/2011/http-statusCodes#')
 HTTPM   = Namespace('https://www.w3.org/2011/http-methods#')
+ISO6391 = Namespace('http://id.loc.gov/vocabulary/iso639-1/')
+OWL     = Namespace('http://www.w3.org/2002/07/owl#')
 
 # URI for representing an unauthenticated visitor, an unknown/multiple languages, or unknown source type.
 # Probably not the best possible, but it will do for now.
