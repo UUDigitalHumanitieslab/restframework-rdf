@@ -11,3 +11,7 @@ SCHEMA  = Namespace('http://schema.org/')
 HTTP    = Namespace('http://www.w3.org/2011/http#')
 HTTPSC  = Namespace('https://www.w3.org/2011/http-statusCodes#')
 HTTPM   = Namespace('https://www.w3.org/2011/http-methods#')
+
+# URI for representing an unauthenticated visitor, an unknown/multiple languages, or unknown source type.
+# Probably not the best possible, but it will do for now.
+UNKNOWN = 'https://www.wikidata.org/wiki/Q24238356'
