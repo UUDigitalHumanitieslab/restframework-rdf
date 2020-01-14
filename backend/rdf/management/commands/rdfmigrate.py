@@ -1,11 +1,17 @@
 """
 Algorithms and manage.py command for migrating RDF data.
+
+Django applications that wish to support this command should include
+an rdf_migrations module which should define a Migration class that
+derives from rdf.migrations.RDFMigration.
 """
 
 from importlib import import_module
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+
+from rdflib_django.utils import get_conjunctive_graph
 
 from rdf.utils import append_triples, prune_triples
 
@@ -30,9 +36,8 @@ class Command(BaseCommand):
     def migrate_package(self, pkg_name):
         """ Determine whether `pkg` has RDF migrations. If so, apply them. """
         try:
-            graph = import_module('.graph', pkg_name)
-            fixture = import_module('.fixture', pkg_name)
-            self.migrate_graph(graph.graph(), fixture.canonical_graph())
+            migrations = import_module('.rdf_migrations', pkg_name)
+            self.migrate_graph(migrations.Migration())
             self.stdout.write('Applied RDF migrations for {}.'.format(pkg_name))
         except ImportError:
             # Nothing to do, this package has no RDF migrations.
@@ -41,14 +46,21 @@ class Command(BaseCommand):
             # Likewise.
             pass
 
-    def migrate_graph(self, actual, desired):
+    def migrate_graph(self, migration):
         """ Update the `actual` graph to match `desired`. """
+        actual = migration.actual()
+        desired = migration.desired()
         additions = desired - actual
         deletions = actual - desired
-        # TODO: compute subject nodes that weren't in `actual` before.
-        # TODO: compute subject nodes that will disappear from `actual`.
+        subjects_added = set(additions.subjects())
+        subjects_deleted = set(deletions.subjects())
+        conjunctive = get_conjunctive_graph()
         # Do the additions first in case we need to update referencing triples.
         append_triples(actual, additions)
-        # TODO: insert post-add logic here
-        # TODO: insert pre-delete logic here
+        adders = (migration.add_handlers.get(s) for s in subjects_added)
+        for handler_name in filter(None, adders):
+            getattr(migration, handler_name)(actual, conjunctive)
+        deleters = (migration.remove_handlers.get(s) for s in subjects_deleted)
+        for handler_name in filter(None, deleters):
+            getattr(migration, handler_name)(actual, conjunctive)
         prune_triples(actual, deletions)

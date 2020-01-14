@@ -1,4 +1,5 @@
 from django.db import models, DatabaseError
+from django.db.models import F
 from django.db.transaction import atomic
 # See https://docs.djangoproject.com/en/2.2/_modules/django/utils/decorators/
 from django.utils.decorators import classproperty
@@ -30,15 +31,6 @@ class BaseCounter(models.Model):
 
     def increment(self):
         """ Add 1 to the count and save immediately. """
-        decrement_on_rollback = False
-        try:
-            with atomic():
-                if self.pk:
-                    self.refresh_from_db()
-                self.count += 1
-                decrement_on_rollback = True
-                self.save()
-        except DatabaseError:
-            if decrement_on_rollback:
-                self.count -= 1
-            raise
+        self.count = F('count') + 1
+        self.save()
+        self.refresh_from_db()
