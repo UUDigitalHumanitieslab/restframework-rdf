@@ -2,9 +2,10 @@ from importlib import import_module
 
 from pytest import fixture
 
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, ConjunctiveGraph, Literal, URIRef
 
 from rdf.utils import graph_from_triples, prune_triples
+from items.conftest import TRIPLES as ITEMS
 from .ns import *
 
 MAGIC_NODE = URIRef('http://hogwarts.edu/')
@@ -34,10 +35,18 @@ def triples():
 def empty_graph():
     return Graph()
 
+@fixture
+def items():
+    return ITEMS
+
 
 @fixture
 def filled_graph(triples):
     return graph_from_triples(triples)
+
+@fixture
+def itemgraph(items):
+    return graph_from_triples(items, ConjunctiveGraph)
 
 
 @fixture
