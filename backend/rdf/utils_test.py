@@ -4,7 +4,7 @@ from rdflib import Graph
 
 from .ns import *
 from .utils import *
-
+from items import namespace as ITEM
 
 @pytest.fixture
 def other_triples():
@@ -20,6 +20,22 @@ def test_prune_triples(filled_graph, other_triples):
     prune_triples(filled_graph, other_triples)
     after = len(filled_graph)
     assert before - after == 2
+
+
+def test_prune_triples_cascade(itemgraph):
+    anno = ( ITEM['7'], RDF.type, OA.Annotation )
+    # get our item graph from the conjunctive graph
+    privileged_graph = next(itemgraph.contexts()) # victim graph :D
+    prune_triples_cascade(itemgraph, (anno,), [privileged_graph])
+    assert len(itemgraph) == 0
+
+
+def test_prune_triples_cascade_privileged(itemgraph):
+    anno = ( ITEM['7'], RDF.type, OA.Annotation )
+    # get our item graph from the conjunctive graph
+    privileged_graph = next(itemgraph.contexts()) # victim graph :D
+    prune_triples_cascade(itemgraph, (anno,), [privileged_graph], [OA.hasBody])
+    assert len(itemgraph) == 14
 
 
 def test_prune_zero(filled_graph):
