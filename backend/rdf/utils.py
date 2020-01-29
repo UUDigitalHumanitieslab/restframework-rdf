@@ -1,10 +1,35 @@
-from rdflib import Graph, Literal
+from rdflib import Graph, Literal, URIRef
+from items import namespace as ITEM
 
 
 def prune_triples(graph, triples):
     """Remove all items in iterable `triples` from `graph` (modify in place)."""
     for triple in triples:
         graph.remove(triple)
+
+
+def prune_triples_cascade(graph, triples, graphs_applied_to = [], privileged_predicates = []):
+    """
+    Recursively remove subjects in `triples` and all related resources from `graph`.
+    Specify which graphs qualify, i.e. from which triples will be deleted, in `graphs_applied_to`.
+    Optionally, skip items related via specific (privileged) predicates.
+    """
+    for triple in triples:
+        prune_recursively(graph, triple[0], graphs_applied_to, privileged_predicates)
+
+def prune_recursively(graph, subject, graphs_applied_to = [], privileged_predicates = []):
+    """
+    Recursively remove subject and all related resources from `graph`.
+    Specify which graphs qualify, i.e. from which triples will be deleted, in `graphs_applied_to`.
+    Optionally, skip deletion of (i.e. keep) items related via specific (privileged) predicates.
+    """
+    related_by_subject = list(graph.quads((subject, None, None)))
+
+    for s, p, o, c in related_by_subject:
+        if isinstance(o, URIRef) and o != s and p not in privileged_predicates and c in graphs_applied_to:
+            prune_recursively(graph, o, graphs_applied_to, privileged_predicates)
+
+    prune_triples(graph, related_by_subject)
 
 
 def append_triples(graph, triples):
@@ -70,3 +95,6 @@ def traverse_backward(full_graph, fringe, plys):
         subjects = set(fringe.subjects()) - visited_subjects
         plys -= 1
     return result
+
+
+
