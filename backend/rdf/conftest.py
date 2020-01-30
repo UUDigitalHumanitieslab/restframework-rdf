@@ -45,7 +45,7 @@ def filled_graph(triples):
     return graph_from_triples(triples)
 
 @fixture
-def itemgraph(items):
+def filled_conjunctive_graph(items):
     return graph_from_triples(items, ConjunctiveGraph)
 
 
