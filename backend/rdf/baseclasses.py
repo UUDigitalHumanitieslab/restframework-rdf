@@ -29,6 +29,7 @@ class BaseCounter(models.Model):
         """ The subject URI associated with the current value of `count`. """
         return '{}{}'.format(self.namespace, self.count)
 
+    @atomic
     def increment(self):
         """ Add 1 to the count and save immediately. """
         self.count = F('count') + 1
