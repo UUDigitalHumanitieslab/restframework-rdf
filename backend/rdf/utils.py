@@ -1,4 +1,7 @@
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from rdflib import Graph, Literal, URIRef
+from rdflib_django.models import Store
 from items import namespace as ITEM
 
 
@@ -97,4 +100,43 @@ def traverse_backward(full_graph, fringe, plys):
     return result
 
 
+def permission_exists(name, codename):
+    '''
+    Check if a permission with name and codename exists in the database.
 
+    Parameters:
+        name -- User friendly name for the permission.
+        codename -- machinename for the permission.
+    '''
+    return Permission.objects.filter(name=name).filter(codename=codename).exists()
+
+def create_custom_permission(name, codename):
+    '''
+    Create a custom permission. It will be added on rdflib_django's `Store` model,
+    for easy use in the admin module. Note that the combination of 'name' and 'codename'
+    must be unique.
+
+    Parameters:
+        name -- User friendly name for the permission.
+        codename -- machinename for the permission.
+    '''
+    if not permission_exists(name, codename):
+        Permission.objects.create(
+            codename=codename,
+            name=name,
+            content_type=ContentType.objects.get_for_model(Store),
+        )
+
+def create_custom_permissions(permissions):
+    '''
+    Create custom permissions. These will be added on rdflib_django's `Store` model,
+    for easy use in the admin module.
+
+    Parameters:
+        permissions -- a list of permissions to create. Each permission consists of
+        a 'name' (user friendly name) and a 'codename' (machinename). Note that the combination of
+        'name' and 'codename' must be unique.
+        Example: [{ 'name': 'Can create Permissions', 'codename': 'create_permissions' }]
+    '''
+    for perm in permissions:
+        create_custom_permission(perm['name'], perm['codename'])
