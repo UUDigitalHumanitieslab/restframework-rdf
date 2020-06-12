@@ -20,6 +20,7 @@ class RDFLibRenderer(BaseRenderer):
     Graph.serialize. At the very least, this should include the
     `format` parameter, which determines the serialization format.
     """
+
     def render(self, graph, media_type=None, renderer_context=None):
         return graph.serialize(**self.rdflib_args)
 
