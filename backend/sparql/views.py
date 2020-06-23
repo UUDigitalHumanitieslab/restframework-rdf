@@ -13,10 +13,12 @@ from rdf.views import custom_exception_handler as turtle_exception_handler
 
 from .exceptions import NoParamError, ParseSPARQLError
 from .negotiation import SPARQLContentNegotiator
+from .permissions import SPARQLPermission
 
 
 class SPARQLUpdateAPIView(APIView):
     renderer_classes = (TurtleRenderer,)
+    permission_classes = (SPARQLPermission,)
 
     def get_exception_handler(self):
         return turtle_exception_handler

@@ -2,8 +2,8 @@ import json
 
 from rdflib import Graph
 
-QUERY_URL = '/nlp-ontology'
-UPDATE_URL = QUERY_URL + '/update'
+QUERY_URL = '/sparql/nlp-ontology/query'
+UPDATE_URL = '/sparql/nlp-ontology/update'
 
 
 def check_content_type(response, content_type):
