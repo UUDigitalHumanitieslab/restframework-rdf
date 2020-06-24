@@ -14,7 +14,10 @@ class SPARQLContentNegotiator(DefaultContentNegotiation):
 
         if query_type in ('ASK', 'SELECT'):
             renderers = [renderer() for renderer in self.results_renderers]
-        if query_type in ('EMPTY',):
+        elif query_type in ('EMPTY', 'CONSTRUCT'):
             renderers = [renderer() for renderer in self.rdf_renderers]
+        else:
+            renderers = [renderer() for renderer in set(
+                self.rdf_renderers+self.results_renderers)]
 
         return super().select_renderer(request, renderers, format_suffix)
