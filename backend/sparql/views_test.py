@@ -64,7 +64,18 @@ def test_malformed_query(admin_client):
     assert response.status_code == 400
 
 
-def test_negotiation(client, ontologygraph_db):
+def test_negotiation(client, ontologygraph_db, accept_headers, test_queries):
     empty_get = client.get(QUERY_URL)
     assert empty_get.status_code == 200
-    assert check_content_type(empty_get, 'text/turtle')
+    assert check_content_type(empty_get, accept_headers.turtle)
+
+    sparql_json_get = client.get(
+        QUERY_URL, {'query': test_queries.SELECT},
+        HTTP_ACCEPT=accept_headers.sparql_json)
+    assert sparql_json_get.status_code == 200
+    assert check_content_type(sparql_json_get, accept_headers.sparql_json)
+
+    json_get = client.get(
+        QUERY_URL, {'query': test_queries.SELECT},
+        HTTP_ACCEPT=accept_headers.json)
+    assert json_get.status_code == 406

@@ -72,3 +72,13 @@ def test_queries():
         'INSERT': INSERT_QUERY
     }
     return SimpleNamespace(**values)
+
+
+@pytest.fixture
+def accept_headers():
+    values = {
+        'turtle': 'text/turtle',
+        'sparql_json': 'application/sparql-results+json',
+        'json': 'application/json'
+    }
+    return SimpleNamespace(**values)
