@@ -1,6 +1,6 @@
 from django.urls import path
 
-from items import ITEMS_ROUTE
+from items import ITEMS_SLUG
 from items.graph import graph
 from sparql.views import SPARQLQueryAPIView
 
@@ -13,5 +13,5 @@ class ItemsQueryView(SPARQLQueryAPIView):
 
 
 ITEMS_URLS = [
-    path('{}/query'.format(ITEMS_ROUTE), ItemsQueryView.as_view()),
+    path('{}/query'.format(ITEMS_SLUG), ItemsQueryView.as_view()),
 ]

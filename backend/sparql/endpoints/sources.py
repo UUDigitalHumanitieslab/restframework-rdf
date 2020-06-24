@@ -1,6 +1,6 @@
 from django.urls import path
 
-from sources import SOURCES_ROUTE
+from sources import SOURCES_SLUG
 from sources.graph import graph
 from sparql.views import SPARQLQueryAPIView
 
@@ -13,5 +13,5 @@ class SourcesQueryView(SPARQLQueryAPIView):
 
 
 SOURCES_URLS = [
-    path('{}/query'.format(SOURCES_ROUTE), SourcesQueryView.as_view()),
+    path('{}/query'.format(SOURCES_SLUG), SourcesQueryView.as_view()),
 ]
