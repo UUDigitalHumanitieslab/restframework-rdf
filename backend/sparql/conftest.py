@@ -1,13 +1,13 @@
 from types import SimpleNamespace
 
 import pytest
+from django.contrib.auth.models import Group, User, Permission
 from rdflib import Literal
-
-from rdf.ns import RDF, SCHEMA
-from rdf.utils import graph_from_triples
 
 from nlp_ontology import namespace as my
 from nlp_ontology.graph import graph
+from rdf.ns import RDF, SCHEMA
+from rdf.utils import graph_from_triples
 
 TRIPLES = (
     (my.icecream,   RDF.type,       SCHEMA.Food),
@@ -22,7 +22,7 @@ INSERT_QUERY = '''
     PREFIX dctypes: <http://purl.org/dc/dcmitype/>
     PREFIX ns3: <http://schema.org/>
 
-    INSERT DATA { 
+    INSERT DATA {
         my:icecream         a               ns3:Food        ;
                             ns3:color       "#f9e5bc"       .
         ns3:Cat             my:meow         "loud"          .
@@ -36,15 +36,15 @@ SELECT_QUERY = '''
     }
 '''
 
-ASK_QUERY = '''PREFIX my: <http://testserver/nlp-ontology#> 
+ASK_QUERY = '''PREFIX my: <http://testserver/nlp-ontology#>
 ASK { ?x my:meow  "loud" }'''
-ASK_QUERY_FALSE = '''PREFIX my: <http://testserver/nlp-ontology#> 
+ASK_QUERY_FALSE = '''PREFIX my: <http://testserver/nlp-ontology#>
 ASK { ?x my:meow  "silent" }'''
 
 CONSTRUCT_QUERY = '''
     PREFIX my: <http://testserver/nlp-ontology#>
     PREFIX ns3: <http://schema.org/>
-    CONSTRUCT WHERE { ?x my:meow ?name } 
+    CONSTRUCT WHERE { ?x my:meow ?name }
 '''
 
 
@@ -82,3 +82,11 @@ def accept_headers():
         'json': 'application/json'
     }
     return SimpleNamespace(**values)
+
+
+@pytest.fixture
+def sparql_user(db):
+    user = User.objects.create_user(username='john', password='')
+    update_perm = Permission.objects.get(codename='sparql_update')
+    user.user_permissions.add(update_perm)
+    return user

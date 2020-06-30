@@ -42,16 +42,6 @@ def test_construct(client, test_queries, ontologygraph_db):
     assert response.status_code == 200
 
 
-def test_authorized(admin_client, test_queries):
-    response = admin_client.post(UPDATE_URL, {'update': test_queries.INSERT})
-    assert response.status_code == 200
-
-
-def test_unauthorized(client):
-    response = client.post(UPDATE_URL)
-    assert response.status_code == 403
-
-
 def test_malformed_update(admin_client):
     response = admin_client.post(
         UPDATE_URL, {'update': 'this is no SPARQL update!'})
@@ -79,3 +69,13 @@ def test_negotiation(client, ontologygraph_db, accept_headers, test_queries):
         QUERY_URL, {'query': test_queries.SELECT},
         HTTP_ACCEPT=accept_headers.json)
     assert json_get.status_code == 406
+
+
+def test_permissions(client, sparql_user, test_queries):
+    res = client.post(UPDATE_URL, {'update': test_queries.INSERT})
+    assert res.status_code == 403
+
+    client.login(username=sparql_user.username, password='')
+    res = client.post(
+        UPDATE_URL, {'update': test_queries.INSERT})
+    assert res.status_code == 200
