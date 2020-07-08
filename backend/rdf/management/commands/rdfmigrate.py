@@ -11,9 +11,7 @@ from importlib import import_module
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from rdflib_django.utils import get_conjunctive_graph
-
-from rdf.utils import append_triples, prune_triples
+from rdf.utils import append_triples, prune_triples, get_conjunctive_graph
 
 
 class Command(BaseCommand):
