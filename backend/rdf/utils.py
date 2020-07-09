@@ -1,8 +1,14 @@
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, ConjunctiveGraph, Literal, URIRef
 from rdflib_django.models import Store
 from items import namespace as ITEM
+
+
+def get_conjunctive_graph():
+    """ Returns the conjunctive graph of our SPARQL store. """
+    return ConjunctiveGraph(settings.RDFLIB_STORE)
 
 
 def prune_triples(graph, triples):
