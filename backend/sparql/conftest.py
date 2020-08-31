@@ -55,7 +55,7 @@ def ontologygraph():
 
 
 @pytest.fixture
-def ontologygraph_db(db, ontologygraph):
+def ontologygraph_db(db, ontologygraph, sparqlstore):
     g = graph()
     g += ontologygraph
     yield

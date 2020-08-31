@@ -28,13 +28,13 @@ def test_ask(client, test_queries, ontologygraph_db):
     true_response = client.get(
         QUERY_URL, {'query': test_queries.ASK_TRUE})
     assert true_response.status_code == 200
-    assert json.loads(true_response.content)['boolean']
+    assert json.loads(true_response.content.decode('utf8'))['boolean']
     assert check_content_type(true_response, 'application/sparql-results+json')
 
     false_response = client.get(
         QUERY_URL, {'query': test_queries.ASK_FALSE})
     assert false_response.status_code == 200
-    assert not json.loads(false_response.content)['boolean']
+    assert not json.loads(false_response.content.decode('utf8'))['boolean']
 
 
 def test_construct(client, test_queries, ontologygraph_db):
@@ -42,13 +42,23 @@ def test_construct(client, test_queries, ontologygraph_db):
     assert response.status_code == 200
 
 
-def test_malformed_update(admin_client):
+def test_authorized(admin_client, test_queries, sparqlstore):
+    response = admin_client.post(UPDATE_URL, {'update': test_queries.INSERT})
+    assert response.status_code == 200
+
+
+def test_unauthorized(client, sparqlstore):
+    response = client.post(UPDATE_URL)
+    assert response.status_code == 403
+
+
+def test_malformed_update(admin_client, sparqlstore):
     response = admin_client.post(
         UPDATE_URL, {'update': 'this is no SPARQL update!'})
     assert response.status_code == 400
 
 
-def test_malformed_query(admin_client):
+def test_malformed_query(admin_client, sparqlstore):
     response = admin_client.post(
         QUERY_URL, {'query': 'this is no SPARQL query!'})
     assert response.status_code == 400
