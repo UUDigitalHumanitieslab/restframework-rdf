@@ -1,7 +1,7 @@
 from django.http.response import HttpResponseBase
 from pyparsing import ParseException
 from rdflib import BNode, Literal
-
+from requests.exceptions import HTTPError
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,13 +24,22 @@ class SPARQLUpdateAPIView(APIView):
         return turtle_exception_handler
 
     def execute_update(self, updatestring):
+        graph = self.graph()
         try:
-            return self.graph().update(updatestring)
+            return graph.update(updatestring)
         except ParseException as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
+            graph.rollback()
             raise ParseSPARQLError(p_e)
-        except Exception as err:
-            raise APIException(err)
+        except HTTPError as h_e:
+            graph.rollback()
+            if 400 <= h_e.response.status_code < 500:
+                raise ParseSPARQLError(h_e)
+            else:
+                raise APIException(h_e)
+        except Exception as e:
+            graph.rollback()
+            raise APIException(e)
 
     def post(self, request, **kwargs):
         """ Accepts POST request with SPARQL-Query in body parameter 'query'
@@ -110,6 +119,11 @@ class SPARQLQueryAPIView(APIView):
         except ParseException as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             raise ParseSPARQLError(p_e)
+        except HTTPError as h_e:
+            if 400 <= h_e.response.status_code < 500:
+                raise ParseSPARQLError(h_e)
+            else:
+                raise APIException(h_e)
         except Exception as n_e:
             raise APIException(n_e)
 
@@ -122,6 +136,7 @@ class SPARQLQueryAPIView(APIView):
         """
         sparql_string = request.query_params.get("query")
         query_results = self.execute_query(sparql_string)
+
         return Response(query_results)
 
     def post(self, request, **kwargs):
