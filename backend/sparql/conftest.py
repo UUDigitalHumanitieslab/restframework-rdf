@@ -1,14 +1,14 @@
 from types import SimpleNamespace
 
 import pytest
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
+from django.test.client import Client
 from rdflib import Literal
 
 from nlp_ontology import namespace as my
 from nlp_ontology.graph import graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
-
 from sources.constants import SOURCES_NS
 
 TRIPLES = (
@@ -101,3 +101,9 @@ def sparql_user(db):
     update_perm = Permission.objects.get(codename='sparql_update')
     user.user_permissions.add(update_perm)
     return user
+
+
+@pytest.fixture
+def sparql_client(client, sparql_user):
+    client.login(username=sparql_user.username, password='')
+    return client

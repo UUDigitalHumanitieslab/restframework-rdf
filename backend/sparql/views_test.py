@@ -53,13 +53,12 @@ def test_construct(client, test_queries, ontologygraph_db):
     assert response.status_code == 200
 
 
-def test_malformed(client, sparql_user, sparqlstore):
-    malformed_get = client.post(
+def test_malformed(sparql_client, sparqlstore):
+    malformed_get = sparql_client.post(
         QUERY_URL, {'query': 'this is no SPARQL query!'})
     assert malformed_get.status_code == 400
 
-    client.login(username=sparql_user.username, password='')
-    malformed_update = client.post(
+    malformed_update = sparql_client.post(
         UPDATE_URL, {'update': 'this is no SPARQL query!'})
     assert malformed_update.status_code == 400
 
@@ -91,51 +90,50 @@ def test_permissions(client, sparql_user, test_queries, sparqlstore):
     assert res.status_code == 200
 
 
-def test_from_query(client, sparql_user, test_queries, sparqlstore):
+def test_from_query(sparql_client, test_queries, sparqlstore):
     other_graph_url = '/sparql/source/query'
 
     # Put some data into nlp_ontology graph
-    client.login(username=sparql_user.username, password='')
-    client.post(UPDATE_URL, {'update': test_queries.INSERT})
+    sparql_client.post(UPDATE_URL, {'update': test_queries.INSERT})
 
     # Query to nlp_ontology should return the inserted triples
-    res = client.get(QUERY_URL)
+    res = sparql_client.get(QUERY_URL)
     data = Graph().parse(data=res.content, format='turtle')
     assert res.status_code == 200
     assert len(data) == 3
 
     # Query to another graph should return no triples
-    res_other = client.get(other_graph_url)
+    res_other = sparql_client.get(other_graph_url)
     data_other = Graph().parse(data=res_other.content, format='turtle')
     assert res_other.status_code == 200
     assert len(data_other) == 0
 
     # FROM <another_graph> query should return the triples in nlp_ontology
-    res_from = client.post(QUERY_URL, {'query': test_queries.SELECT_FROM})
+    res_from = sparql_client.post(
+        QUERY_URL, {'query': test_queries.SELECT_FROM})
     data_from = json.loads(res_from.content.decode('utf8'))['results']
     assert res_from.status_code == 200
     assert len(data_from['bindings']) == 3
 
 
-def test_clear(client, sparql_user, test_queries, sparqlstore, accept_headers):
+def test_clear(sparql_client, test_queries, sparqlstore, accept_headers):
     other_query = '/sparql/ontology/query'
     other_update = '/sparql/ontology/update'
 
-    g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
+    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
     assert queryresult_count(g1) == queryresult_count(g2) == 0
 
-    client.login(username=sparql_user.username, password='')
-    client.post(UPDATE_URL, {'update': test_queries.INSERT})
-    client.post(other_update, {'update': test_queries.INSERT})
-    g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    sparql_client.post(UPDATE_URL, {'update': test_queries.INSERT})
+    sparql_client.post(other_update, {'update': test_queries.INSERT})
+    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
+    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
     assert queryresult_count(g1) == queryresult_count(g2) == 3
 
-    client.post(
+    sparql_client.post(
         UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/nlp-ontology#>'})
-    g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
+    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
     assert queryresult_count(g1) == 0
     assert queryresult_count(g2) == 3
 
