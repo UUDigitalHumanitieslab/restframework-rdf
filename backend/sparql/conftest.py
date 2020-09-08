@@ -1,13 +1,15 @@
 from types import SimpleNamespace
 
 import pytest
-from django.contrib.auth.models import Group, User, Permission
+from django.contrib.auth.models import User, Permission
 from rdflib import Literal
 
 from nlp_ontology import namespace as my
 from nlp_ontology.graph import graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
+
+from sources.constants import SOURCES_NS
 
 TRIPLES = (
     (my.icecream,   RDF.type,       SCHEMA.Food),
@@ -35,6 +37,14 @@ SELECT_QUERY = '''
         ?s ?p ?o .
     }
 '''
+
+SELECT_FROM_QUERY = '''
+    SELECT ?s ?p ?o
+    FROM <{ns}>
+    WHERE {{
+        ?s ?p ?o .
+    }}
+'''.format(ns=SOURCES_NS)
 
 ASK_QUERY = '''PREFIX my: <http://testserver/nlp-ontology#>
 ASK { ?x my:meow  "loud" }'''
@@ -69,6 +79,7 @@ def test_queries():
         'ASK_FALSE': ASK_QUERY_FALSE,
         'CONSTRUCT': CONSTRUCT_QUERY,
         'SELECT': SELECT_QUERY,
+        'SELECT_FROM': SELECT_FROM_QUERY,
         'INSERT': INSERT_QUERY
     }
     return SimpleNamespace(**values)
