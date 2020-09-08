@@ -123,14 +123,34 @@ def test_clear(client, sparql_user, test_queries, sparqlstore, accept_headers):
     other_query = '/sparql/ontology/query'
     other_update = '/sparql/ontology/update'
 
-    init_g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    init_g2 = client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(init_g1) == queryresult_count(init_g2) == 0
+    g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
+    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g1) == queryresult_count(g2) == 0
 
     client.login(username=sparql_user.username, password='')
     client.post(UPDATE_URL, {'update': test_queries.INSERT})
     client.post(other_update, {'update': test_queries.INSERT})
     g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
     g2 = client.get(other_query, {'query': test_queries.SELECT}).content
-
     assert queryresult_count(g1) == queryresult_count(g2) == 3
+
+    client.post(
+        UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/nlp-ontology#>'})
+    g1 = client.get(QUERY_URL, {'query': test_queries.SELECT}).content
+    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g1) == 0
+    assert queryresult_count(g2) == 3
+
+    # CLEAR other graph to specified endpoint should not work
+    # currently fails
+    client.post(
+        UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/ontology#>'})
+    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g2) == 3
+
+    # CLEAR ALL to specified endpoint should not clear others
+    # currently fails (also after removing test above)
+    client.post(
+        UPDATE_URL, {'update': 'CLEAR ALL'})
+    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g2) == 3
