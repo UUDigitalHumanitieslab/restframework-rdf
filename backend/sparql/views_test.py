@@ -139,14 +139,14 @@ def test_clear(sparql_client, test_queries, sparqlstore, accept_headers):
 
     # CLEAR other graph to specified endpoint should not work
     # currently fails
-    # client.post(
-    #     UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/ontology#>'})
-    # g2 = client.get(other_query, {'query': test_queries.SELECT}).content
-    # assert queryresult_count(g2) == 3
+    sparql_client.post(
+        UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/ontology#>'})
+    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g2) == 3
 
     # CLEAR ALL to specified endpoint should not clear others
     # currently fails (also after removing test above)
-    # client.post(
-    #     UPDATE_URL, {'update': 'CLEAR ALL'})
-    # g2 = client.get(other_query, {'query': test_queries.SELECT}).content
-    # assert queryresult_count(g2) == 3
+    client.post(
+        UPDATE_URL, {'update': 'CLEAR ALL'})
+    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
+    assert queryresult_count(g2) == 3
