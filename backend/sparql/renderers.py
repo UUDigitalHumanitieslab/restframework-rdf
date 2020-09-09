@@ -4,7 +4,7 @@ from io import StringIO
 from rdflib.plugins.sparql.results.jsonresults import JSONResultSerializer
 from rest_framework.renderers import JSONRenderer
 
-from rdf.renderers import TurtleRenderer
+from rdf.renderers import TurtleRenderer, RDFLibRenderer
 from rdf.utils import graph_from_triples
 
 
@@ -29,3 +29,11 @@ class QueryResultsJSONRenderer(JSONRenderer):
             return super().render(serialized_results,
                                   media_type,
                                   renderer_context)
+
+
+class QueryResultsXMLRenderer(RDFLibRenderer):
+    media_type = 'application/sparql-results+xml'
+    format = 'xml'
+
+    def render(self, query_results, media_type=None, renderer_context=None):
+        return query_results.serialize(format='xml')

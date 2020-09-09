@@ -74,6 +74,12 @@ def test_negotiation(client, ontologygraph_db, accept_headers, test_queries):
     assert sparql_json_get.status_code == 200
     assert check_content_type(sparql_json_get, accept_headers.sparql_json)
 
+    sparql_xml_get = client.get(
+        QUERY_URL, {'query': test_queries.SELECT},
+        HTTP_ACCEPT=accept_headers.sparql_xml)
+    assert sparql_xml_get.status_code == 200
+    assert check_content_type(sparql_xml_get, accept_headers.sparql_xml)
+
     json_get = client.get(
         QUERY_URL, {'query': test_queries.SELECT},
         HTTP_ACCEPT=accept_headers.json)

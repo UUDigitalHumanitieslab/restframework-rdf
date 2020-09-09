@@ -2,11 +2,12 @@ from rest_framework.negotiation import DefaultContentNegotiation
 
 from rdf.renderers import TurtleRenderer
 
-from .renderers import QueryResultsJSONRenderer, QueryResultsTurtleRenderer
+from .renderers import QueryResultsJSONRenderer, QueryResultsTurtleRenderer, QueryResultsXMLRenderer
 
 
 class SPARQLContentNegotiator(DefaultContentNegotiation):
-    results_renderers = (QueryResultsJSONRenderer, QueryResultsTurtleRenderer)
+    results_renderers = (QueryResultsJSONRenderer,
+                         QueryResultsXMLRenderer, QueryResultsTurtleRenderer)
     rdf_renderers = (TurtleRenderer,)
 
     def select_renderer(self, request, renderers, format_suffix=None):

@@ -90,6 +90,7 @@ def accept_headers():
     values = {
         'turtle': 'text/turtle',
         'sparql_json': 'application/sparql-results+json',
+        'sparql_xml': 'application/sparql-results+xml',
         'json': 'application/json'
     }
     return SimpleNamespace(**values)
