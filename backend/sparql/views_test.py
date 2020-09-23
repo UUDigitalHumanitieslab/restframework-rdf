@@ -122,37 +122,35 @@ def test_from_query(sparql_client, test_queries, sparqlstore):
     assert len(data_from['bindings']) == 3
 
 
-def test_clear(sparql_client, test_queries, sparqlstore, accept_headers):
+def test_clear_self_other(sparql_client, query_with_results, sparqlstore):
     other_query = '/sparql/ontology/query'
     other_update = '/sparql/ontology/update'
 
-    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(g1) == queryresult_count(g2) == 0
+    ins = query_with_results.insert
+    sel = query_with_results.select
+    exp = query_with_results.expected
+    empty = query_with_results.empty
 
-    sparql_client.post(UPDATE_URL, {'update': test_queries.INSERT})
-    sparql_client.post(other_update, {'update': test_queries.INSERT})
-    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(g1) == queryresult_count(g2) == 3
+    # Insert the same data on two endpoints
+    post1 = sparql_client.post(UPDATE_URL, {'update': ins})
+    post2 = sparql_client.post(other_update, {'update': ins})
+    assert post1.status_code == post2.status_code == 200
 
-    sparql_client.post(
-        UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/nlp-ontology#>'})
-    g1 = sparql_client.get(QUERY_URL, {'query': test_queries.SELECT}).content
-    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(g1) == 0
-    assert queryresult_count(g2) == 3
+    # Assert data at both endpoints is equal
+    g1 = sparql_client.get(QUERY_URL, {'query': sel}).content
+    g2 = sparql_client.get(other_query, {'query': sel}).content
+    assert results_as_dict(g1) == results_as_dict(g2) == exp
 
-    # CLEAR other graph to specified endpoint should not work
-    # currently fails
-    sparql_client.post(
-        UPDATE_URL, {'update': 'CLEAR GRAPH <http://testserver/ontology#>'})
-    g2 = sparql_client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(g2) == 3
+    # Clear self
+    clear_self = sparql_client.post(
+        UPDATE_URL, {'update': query_with_results.clear_self})
+    g1 = sparql_client.get(QUERY_URL, {'query': sel}).content
+    assert clear_self.status_code == 200
+    assert results_as_dict(g1) == empty
 
-    # CLEAR ALL to specified endpoint should not clear others
-    # currently fails (also after removing test above)
-    client.post(
-        UPDATE_URL, {'update': 'CLEAR ALL'})
-    g2 = client.get(other_query, {'query': test_queries.SELECT}).content
-    assert queryresult_count(g2) == 3
+    # Clear other
+    clear_other = sparql_client.post(
+        UPDATE_URL, {'update': query_with_results.clear_other})
+    g2 = sparql_client.get(other_query, {'query': sel}).content
+    assert clear_other.status_code == 200
+    assert results_as_dict(g2) == exp

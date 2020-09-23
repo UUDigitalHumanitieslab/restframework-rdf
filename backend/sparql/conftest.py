@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
+from django.conf import settings
 from django.contrib.auth.models import Permission, User
-from django.test.client import Client
 from rdflib import Literal
 
 from nlp_ontology import namespace as my
@@ -86,6 +86,29 @@ def test_queries():
 
 
 @pytest.fixture
+def query_with_results():
+    return SimpleNamespace(
+        insert='PREFIX ns3:<http://schema.org/> INSERT DATA { ns3:Person ns3:givenName "bassie" }',
+        select=SELECT_QUERY,
+        expected={
+            'results': {
+                'bindings': [
+                    {'s': {'type': 'uri', 'value': 'http://schema.org/Person'},
+                     'p': {'type': 'uri', 'value': 'http://schema.org/givenName'},
+                     'o': {'type': 'literal', 'value': 'bassie'}}
+                ]
+            },
+            'head': {'vars': ['s', 'p', 'o']}
+        },
+        empty={'head': {'vars': ['s', 'p', 'o']}, 'results': {'bindings': []}},
+        clear_self='CLEAR GRAPH <{}nlp-ontology#>'.format(
+            settings.RDF_NAMESPACE_ROOT),
+        clear_other='CLEAR GRAPH <{}ontology#>'.format(
+            settings.RDF_NAMESPACE_ROOT)
+    )
+
+
+@ pytest.fixture
 def accept_headers():
     values = {
         'turtle': 'text/turtle',
@@ -96,7 +119,7 @@ def accept_headers():
     return SimpleNamespace(**values)
 
 
-@pytest.fixture
+@ pytest.fixture
 def sparql_user(db):
     user = User.objects.create_user(username='john', password='')
     update_perm = Permission.objects.get(codename='sparql_update')
@@ -104,7 +127,7 @@ def sparql_user(db):
     return user
 
 
-@pytest.fixture
+@ pytest.fixture
 def sparql_client(client, sparql_user):
     client.login(username=sparql_user.username, password='')
     return client
