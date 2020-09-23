@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 
 import pytest
-from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from rdflib import Literal
 
@@ -10,6 +9,7 @@ from nlp_ontology.graph import graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
 from sources.constants import SOURCES_NS
+from nlp_ontology.constants import NLP_ONTOLOGY_NS
 
 TRIPLES = (
     (my.icecream,   RDF.type,       SCHEMA.Food),
@@ -101,10 +101,10 @@ def query_with_results():
             'head': {'vars': ['s', 'p', 'o']}
         },
         empty={'head': {'vars': ['s', 'p', 'o']}, 'results': {'bindings': []}},
-        clear_self='CLEAR GRAPH <{}nlp-ontology#>'.format(
-            settings.RDF_NAMESPACE_ROOT),
-        clear_other='CLEAR GRAPH <{}ontology#>'.format(
-            settings.RDF_NAMESPACE_ROOT)
+        clear_self='CLEAR GRAPH <{ns}>'.format(
+            ns=NLP_ONTOLOGY_NS),
+        clear_other='CLEAR GRAPH <{ns}>'.format(
+            ns=SOURCES_NS)
     )
 
 

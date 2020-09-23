@@ -6,14 +6,12 @@ from sparql.views import SPARQLQueryAPIView, SPARQLUpdateAPIView
 
 
 class NlpOntologyQueryView(SPARQLQueryAPIView):
-    """ Query the NLP ontology through SPARQL-Query """
 
     def graph(self):
         return graph()
 
 
 class NlpOntologyUpdateView(SPARQLUpdateAPIView):
-    """ Update the NLP ontology through SPARQL-Update """
 
     def graph(self):
         return graph()

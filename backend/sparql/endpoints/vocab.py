@@ -6,7 +6,6 @@ from sparql.views import SPARQLQueryAPIView
 
 
 class VocabQueryView(SPARQLQueryAPIView):
-    """ Query the NLP ontology through SPARQL-Query """
 
     def graph(self):
         return graph()

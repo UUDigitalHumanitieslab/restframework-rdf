@@ -123,8 +123,8 @@ def test_from_query(sparql_client, test_queries, sparqlstore):
 
 
 def test_clear_self_other(sparql_client, query_with_results, sparqlstore):
-    other_query = '/sparql/ontology/query'
-    other_update = '/sparql/ontology/update'
+    other_query = '/sparql/source/query'
+    other_update = '/sparql/source/update'
 
     ins = query_with_results.insert
     sel = query_with_results.select
