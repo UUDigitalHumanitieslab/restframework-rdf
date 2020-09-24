@@ -10,3 +10,8 @@ class NoParamError(APIException):
 class ParseSPARQLError(ParseError):
     default_detail = 'Error parsing SPARQL.'
     default_code = 'sparql_parse_error'
+
+
+class NotSupportedSPARQLError(ParseError):
+    default_detail = 'SPARQL-Update operation not supported.'
+    default_code = 'sparql_not_supported'

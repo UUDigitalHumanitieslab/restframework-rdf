@@ -1,21 +1,24 @@
+import re
+
 from django.http.response import HttpResponseBase
 from pyparsing import ParseException
 from rdflib import BNode, Literal
+from rdflib.plugins.sparql.parser import parseUpdate
 from requests.exceptions import HTTPError
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
 
 from rdf.ns import HTTP, HTTPSC, RDF
 from rdf.renderers import TurtleRenderer
 from rdf.utils import graph_from_triples
 from rdf.views import custom_exception_handler as turtle_exception_handler
 
-from .exceptions import NoParamError, ParseSPARQLError
+from .constants import UPDATE_NOT_SUPPORTED, UPDATE_NOT_SUPPORTED_PATTERN
+from .exceptions import NoParamError, NotSupportedSPARQLError, ParseSPARQLError
 from .negotiation import SPARQLContentNegotiator
 from .permissions import SPARQLPermission
-
-from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
 
 
 class SPARQLUpdateAPIView(APIView):
@@ -25,8 +28,26 @@ class SPARQLUpdateAPIView(APIView):
     def get_exception_handler(self):
         return turtle_exception_handler
 
+    def is_supported(self, updatestring):
+        # check the entire string for unsupported keywords
+        if re.match(UPDATE_NOT_SUPPORTED_PATTERN, updatestring):
+            # do a dry-run parse of the updatestring
+            parse_request = parseUpdate(updatestring).request
+            # check if the parse contains any unsupported operations
+            for part in parse_request:
+                if part.name in UPDATE_NOT_SUPPORTED:
+                    return False
+        return True
+
     def execute_update(self, updatestring):
         graph = self.graph()
+
+        if not self.is_supported(updatestring):
+            raise NotSupportedSPARQLError(
+                'Update operation "{}" is not supported.')
+
+        # TODO: should we support? (probably not)
+        # LOAD, CLEAR, DROP, ADD, MOVE, COPY, CREATE
         try:
             return graph.update(updatestring)
         except (ParseException, QueryBadFormed) as p_e:
