@@ -1,4 +1,5 @@
 import re
+
 # These update operations are not supported
 # TODO: wiki reference
 UPDATE_NOT_SUPPORTED = ['Load', 'Clear',

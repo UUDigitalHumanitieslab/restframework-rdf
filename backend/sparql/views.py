@@ -45,8 +45,6 @@ class SPARQLUpdateAPIView(APIView):
         if not self.is_supported(updatestring):
             raise NotSupportedSPARQLError('Update operation is not supported.')
 
-        # TODO: should we support? (probably not)
-        # LOAD, CLEAR, DROP, ADD, MOVE, COPY, CREATE
         try:
             return graph.update(updatestring)
         except (ParseException, QueryBadFormed) as p_e:
