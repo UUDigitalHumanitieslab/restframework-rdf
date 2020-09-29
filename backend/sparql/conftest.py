@@ -11,20 +11,22 @@ from rdf.utils import graph_from_triples
 from sources.constants import SOURCES_NS
 from nlp_ontology.constants import NLP_ONTOLOGY_NS
 
-TRIPLES = (
-    (my.icecream,   RDF.type,       SCHEMA.Food),
-    (my.icecream,   SCHEMA.color,   Literal("#f9e5bc")),
-    (SCHEMA.Cat,    my.meow,        Literal('loud')),
-)
-
 INSERT_QUERY = '''
-    PREFIX dc: <http://purl.org/dc/elements/1.1/>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX my: <http://testserver/nlp-ontology#>
-    PREFIX dctypes: <http://purl.org/dc/dcmitype/>
     PREFIX ns3: <http://schema.org/>
 
     INSERT DATA {
+        my:icecream         a               ns3:Food        ;
+                            ns3:color       "#f9e5bc"       .
+        ns3:Cat             my:meow         "loud"          .
+    }
+'''
+
+DELETE_DATA_QUERY = '''
+    PREFIX my: <http://testserver/nlp-ontology#>
+    PREFIX ns3: <http://schema.org/>
+
+    DELETE DATA {
         my:icecream         a               ns3:Food        ;
                             ns3:color       "#f9e5bc"       .
         ns3:Cat             my:meow         "loud"          .
@@ -38,7 +40,15 @@ SELECT_QUERY = '''
     }
 '''
 
-SELECT_FROM_QUERY = '''
+SELECT_FROM_NLP_QUERY = '''
+    SELECT ?s ?p ?o
+    FROM <{ns}>
+    WHERE {{
+        ?s ?p ?o .
+    }}
+'''.format(ns=NLP_ONTOLOGY_NS)
+
+SELECT_FROM_SOURCES_QUERY = '''
     SELECT ?s ?p ?o
     FROM <{ns}>
     WHERE {{
@@ -69,8 +79,17 @@ DELETE_FROM_QUERY = '''
 
 
 @pytest.fixture
-def ontologygraph():
-    g = graph_from_triples(TRIPLES)
+def triples():
+    return (
+        (my.icecream,   RDF.type,       SCHEMA.Food),
+        (my.icecream,   SCHEMA.color,   Literal("#f9e5bc")),
+        (SCHEMA.Cat,    my.meow,        Literal('loud')),
+    )
+
+
+@pytest.fixture
+def ontologygraph(triples):
+    g = graph_from_triples(triples)
     return g
 
 
@@ -89,9 +108,11 @@ def test_queries():
         'ASK_FALSE': ASK_QUERY_FALSE,
         'CONSTRUCT': CONSTRUCT_QUERY,
         'SELECT': SELECT_QUERY,
-        'SELECT_FROM': SELECT_FROM_QUERY,
+        'SELECT_FROM_NLP': SELECT_FROM_NLP_QUERY,
+        'SELECT_FROM_SOURCES': SELECT_FROM_SOURCES_QUERY,
         'INSERT': INSERT_QUERY,
         'DELETE': DELETE_QUERY,
+        'DELETE_DATA': DELETE_DATA_QUERY,
         'DELETE_FROM': DELETE_FROM_QUERY
     }
     return SimpleNamespace(**values)
