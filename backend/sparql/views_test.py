@@ -130,7 +130,7 @@ def test_select_from(sparql_client, test_queries, ontologygraph_db, ontologygrap
                              {'query': test_queries.SELECT_FROM_SOURCES},
                              HTTP_ACCEPT=accept_headers.turtle)
     assert res.status_code == 200
-    assert len(Graph().parse(data=res.content, format='turtle')) == 0
+    assert len(Graph().parse(data=res.content, format='turtle')) == 3
 
     # Should return results if FROM and endpoint match
     res = sparql_client.post(QUERY_URL,
