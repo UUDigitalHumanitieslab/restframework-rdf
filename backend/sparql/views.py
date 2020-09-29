@@ -43,8 +43,7 @@ class SPARQLUpdateAPIView(APIView):
         graph = self.graph()
 
         if not self.is_supported(updatestring):
-            raise NotSupportedSPARQLError(
-                'Update operation "{}" is not supported.')
+            raise NotSupportedSPARQLError('Update operation is not supported.')
 
         # TODO: should we support? (probably not)
         # LOAD, CLEAR, DROP, ADD, MOVE, COPY, CREATE

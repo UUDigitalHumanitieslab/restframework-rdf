@@ -10,15 +10,6 @@ def check_content_type(response, content_type):
     return content_type in response._headers['content-type'][1]
 
 
-def results_as_dict(data):
-    return json.loads(data.decode('utf8'))
-
-
-def queryresult_count(data):
-    decoded = results_as_dict(data)
-    return len(decoded['results']['bindings'])
-
-
 def test_insert(admin_client, ontologygraph_db, test_queries):
     post_response = admin_client.post(
         UPDATE_URL, {'update': test_queries.INSERT})
@@ -96,61 +87,24 @@ def test_permissions(client, sparql_user, test_queries, sparqlstore):
     assert res.status_code == 200
 
 
-def test_from_query(sparql_client, test_queries, sparqlstore):
-    other_graph_url = '/sparql/source/query'
-
-    # Put some data into nlp_ontology graph
-    sparql_client.post(UPDATE_URL, {'update': test_queries.INSERT})
-
-    # Query to nlp_ontology should return the inserted triples
-    res = sparql_client.get(QUERY_URL)
-    data = Graph().parse(data=res.content, format='turtle')
-    assert res.status_code == 200
-    assert len(data) == 3
-
-    # Query to another graph should return no triples
-    res_other = sparql_client.get(other_graph_url)
-    data_other = Graph().parse(data=res_other.content, format='turtle')
-    assert res_other.status_code == 200
-    assert len(data_other) == 0
-
-    # FROM <another_graph> query should return the triples in nlp_ontology
-    res_from = sparql_client.post(
-        QUERY_URL, {'query': test_queries.SELECT_FROM})
-    data_from = json.loads(res_from.content.decode('utf8'))['results']
-    assert res_from.status_code == 200
-    assert len(data_from['bindings']) == 3
+def test_unsupported(sparql_client, unsupported_queries, sparqlstore):
+    for query in unsupported_queries.values():
+        request = sparql_client.post(UPDATE_URL, {'update': query})
+        assert b'Update operation is not supported.' in request.content
+        assert request.status_code == 400
 
 
-def test_clear_self_other(sparql_client, query_with_results, sparqlstore):
-    other_query = '/sparql/source/query'
-    other_update = '/sparql/source/update'
+def test_delete(sparql_client, test_queries, ontologygraph_db):
+    # Should not delete if from another endpoint
+    delete = sparql_client.post(
+        '/sparql/ontology/update', {'update': test_queries.DELETE_FROM})
+    assert delete.status_code == 200
+    g = sparql_client.get(QUERY_URL).content
+    assert len(Graph().parse(data=g, format='turtle')) == 3
 
-    ins = query_with_results.insert
-    sel = query_with_results.select
-    exp = query_with_results.expected
-    empty = query_with_results.empty
-
-    # Insert the same data on two endpoints
-    post1 = sparql_client.post(UPDATE_URL, {'update': ins})
-    post2 = sparql_client.post(other_update, {'update': ins})
-    assert post1.status_code == post2.status_code == 200
-
-    # Assert data at both endpoints is equal
-    g1 = sparql_client.get(QUERY_URL, {'query': sel}).content
-    g2 = sparql_client.get(other_query, {'query': sel}).content
-    assert results_as_dict(g1) == results_as_dict(g2) == exp
-
-    # Clear self
-    clear_self = sparql_client.post(
-        UPDATE_URL, {'update': query_with_results.clear_self})
-    g1 = sparql_client.get(QUERY_URL, {'query': sel}).content
-    assert clear_self.status_code == 200
-    assert results_as_dict(g1) == empty
-
-    # Clear other
-    clear_other = sparql_client.post(
-        UPDATE_URL, {'update': query_with_results.clear_other})
-    g2 = sparql_client.get(other_query, {'query': sel}).content
-    assert clear_other.status_code == 200
-    assert results_as_dict(g2) == exp
+    # Should delete if endpoint and graph match
+    delete = sparql_client.post(
+        UPDATE_URL, {'update': test_queries.DELETE})
+    assert delete.status_code == 200
+    g = sparql_client.get(QUERY_URL).content
+    assert len(Graph().parse(data=g, format='turtle')) == 2

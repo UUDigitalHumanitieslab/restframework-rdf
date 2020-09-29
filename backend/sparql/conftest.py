@@ -57,6 +57,16 @@ CONSTRUCT_QUERY = '''
     CONSTRUCT WHERE { ?x my:meow ?name }
 '''
 
+DELETE_QUERY = '''
+    PREFIX my: <{ns}>
+    DELETE {{ ?s ?p ?o }} WHERE {{ ?s ?p ?o ; my:meow "loud" }}
+'''.format(ns=NLP_ONTOLOGY_NS)
+
+DELETE_FROM_QUERY = '''
+    PREFIX my: <{ns}>
+    DELETE {{ GRAPH <{graph}> {{ ?s ?p ?o }} }} WHERE {{ ?s ?p ?o ; my:meow "loud" }}
+'''.format(ns=NLP_ONTOLOGY_NS, graph=NLP_ONTOLOGY_NS)
+
 
 @pytest.fixture
 def ontologygraph():
@@ -80,32 +90,11 @@ def test_queries():
         'CONSTRUCT': CONSTRUCT_QUERY,
         'SELECT': SELECT_QUERY,
         'SELECT_FROM': SELECT_FROM_QUERY,
-        'INSERT': INSERT_QUERY
+        'INSERT': INSERT_QUERY,
+        'DELETE': DELETE_QUERY,
+        'DELETE_FROM': DELETE_FROM_QUERY
     }
     return SimpleNamespace(**values)
-
-
-@pytest.fixture
-def query_with_results():
-    return SimpleNamespace(
-        insert='PREFIX ns3:<http://schema.org/> INSERT DATA { ns3:Person ns3:givenName "bassie" }',
-        select=SELECT_QUERY,
-        expected={
-            'results': {
-                'bindings': [
-                    {'s': {'type': 'uri', 'value': 'http://schema.org/Person'},
-                     'p': {'type': 'uri', 'value': 'http://schema.org/givenName'},
-                     'o': {'type': 'literal', 'value': 'bassie'}}
-                ]
-            },
-            'head': {'vars': ['s', 'p', 'o']}
-        },
-        empty={'head': {'vars': ['s', 'p', 'o']}, 'results': {'bindings': []}},
-        clear_self='CLEAR GRAPH <{ns}>'.format(
-            ns=NLP_ONTOLOGY_NS),
-        clear_other='CLEAR GRAPH <{ns}>'.format(
-            ns=SOURCES_NS)
-    )
 
 
 @ pytest.fixture
@@ -119,7 +108,7 @@ def accept_headers():
     return SimpleNamespace(**values)
 
 
-@ pytest.fixture
+@pytest.fixture
 def sparql_user(db):
     user = User.objects.create_user(username='john', password='')
     update_perm = Permission.objects.get(codename='sparql_update')
@@ -127,7 +116,23 @@ def sparql_user(db):
     return user
 
 
-@ pytest.fixture
+@pytest.fixture
 def sparql_client(client, sparql_user):
     client.login(username=sparql_user.username, password='')
     return client
+
+
+@pytest.fixture
+def unsupported_queries():
+    queries = {
+        'LOAD': 'LOAD <{}> INTO GRAPH <{}>'.format(SOURCES_NS, NLP_ONTOLOGY_NS),
+        'CLEAR_ALL': 'CLEAR ALL',
+        'CLEAR': 'CLEAR GRAPH <{}>'.format(NLP_ONTOLOGY_NS),
+        'DROP': 'CLEAR GRAPH <{}>'.format(NLP_ONTOLOGY_NS),
+        'ADD': 'ADD <{}> TO <{}>'.format(SOURCES_NS, NLP_ONTOLOGY_NS),
+        'MOVE': 'MOVE <{}> TO <{}>'.format(SOURCES_NS, NLP_ONTOLOGY_NS),
+        'COPY': 'COPY <{}> TO <{}>'.format(SOURCES_NS, NLP_ONTOLOGY_NS),
+        'CREATE': 'CREATE GRAPH <http://testserver/newgraph#>'
+    }
+
+    return queries
