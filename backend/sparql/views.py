@@ -8,7 +8,6 @@ from requests.exceptions import HTTPError
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
 
 from rdf.ns import HTTP, HTTPSC, RDF
 from rdf.renderers import TurtleRenderer
@@ -47,7 +46,7 @@ class SPARQLUpdateAPIView(APIView):
 
         try:
             return graph.update(updatestring)
-        except (ParseException, QueryBadFormed) as p_e:
+        except ParseException as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
             raise ParseSPARQLError(p_e)
@@ -137,7 +136,7 @@ class SPARQLQueryAPIView(APIView):
             self.request.data["query_type"] = query_type
             return query_results
 
-        except (ParseException, QueryBadFormed) as p_e:
+        except ParseException as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
             raise ParseSPARQLError(p_e)
