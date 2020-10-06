@@ -55,12 +55,9 @@ def graph_from_triples(triples, ctor=Graph):
     append_triples(graph, triples)
     return graph
 
-def sample_graph(graph, request, subject_filter=None):
+
+def sample_graph(graph, subjects, request):
     """ Return a random sample from a graph, optionally filtering with a list containing [predicate, object]. """
-    if subject_filter:
-        subjects = set(list(graph.subjects(*subject_filter)))
-    else:
-        subjects = set(list(graph.subjects()))
     n_results = int(request.GET.get('n_results'))
     sampled_subjects = random.sample(list(subjects), n_results)
     output = Graph()
