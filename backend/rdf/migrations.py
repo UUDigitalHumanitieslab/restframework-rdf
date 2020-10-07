@@ -37,6 +37,21 @@ def on_remove(uri):
     return decorator
 
 
+def on_present(uri):
+    """
+    Decorator for RDFMigration class methods.
+
+    Use this to mark a method as handling the presence of a
+    particular predicate URI in the actual graph. Each method can
+    be decorated only once in this way.
+    """
+
+    def decorator(method):
+        method.__handles_presence__ = URIRef(uri)
+        return method
+    return decorator
+
+
 class MetaRDFMigration(type):
     """
     Metaclass that ensures the presence of .add_handlers et al.
@@ -48,15 +63,21 @@ class MetaRDFMigration(type):
         augmented = super().__new__(cls, name, bases, namespace, **kwargs)
         add_handlers = {}
         del_handlers = {}
+        pres_handlers = {}
         for attribute_name, value in augmented.__dict__.items():
             add_uri = getattr(value, '__handles_addition__', None)
             del_uri = getattr(value, '__handles_removal__', None)
+            pres_uri = getattr(value, '__handles_presence__', None)
             if add_uri:
                 add_handlers[add_uri] = attribute_name
             if del_uri:
                 del_handlers[del_uri] = attribute_name
+            if pres_uri:
+                pres_handlers[pres_uri] = attribute_name
         augmented.add_handlers = add_handlers
         augmented.remove_handlers = del_handlers
+        augmented.presence_handlers = pres_handlers
+
         return augmented
 
 
