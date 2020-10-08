@@ -59,7 +59,10 @@ def graph_from_triples(triples, ctor=Graph):
 def sample_graph(graph, subjects, request):
     """ Return a random sample from a graph, optionally filtering with a list containing [predicate, object]. """
     n_results = int(request.GET.get('n_results'))
-    sampled_subjects = random.sample(list(subjects), n_results)
+    if len(subjects)>n_results:
+        sampled_subjects = random.sample(list(subjects), n_results)
+    else:
+        sampled_subjects = subjects
     output = Graph()
     for sub in sampled_subjects:
         suggestions = graph.triples((sub, None, None))
