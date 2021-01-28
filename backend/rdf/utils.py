@@ -1,3 +1,5 @@
+import random
+
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -53,6 +55,19 @@ def graph_from_triples(triples, ctor=Graph):
     append_triples(graph, triples)
     return graph
 
+
+def sample_graph(graph, subjects, request):
+    """ Return a random sample from a graph, optionally filtering with a list containing [predicate, object]. """
+    n_results = int(request.GET.get('n_results'))
+    if len(subjects)>n_results:
+        sampled_subjects = random.sample(list(subjects), n_results)
+    else:
+        sampled_subjects = subjects
+    output = Graph()
+    for sub in sampled_subjects:
+        suggestions = graph.triples((sub, None, None))
+        [output.add(s) for s in suggestions]
+    return output
 
 def traverse_forward(full_graph, fringe, plys):
     """
