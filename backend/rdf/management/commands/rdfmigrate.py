@@ -50,6 +50,7 @@ class Command(BaseCommand):
         desired = migration.desired()
         additions = desired - actual
         deletions = actual - desired
+        predicates_present = set(actual.predicates())
         subjects_added = set(additions.subjects())
         subjects_deleted = set(deletions.subjects())
         conjunctive = get_conjunctive_graph()
@@ -62,3 +63,8 @@ class Command(BaseCommand):
         for handler_name in filter(None, deleters):
             getattr(migration, handler_name)(actual, conjunctive)
         prune_triples(actual, deletions)
+        # Handle predicate presence
+        presence_handlers = (migration.presence_handlers.get(s)
+                             for s in predicates_present)
+        for handler_name in filter(None, presence_handlers):
+            getattr(migration, handler_name)(actual, conjunctive)
