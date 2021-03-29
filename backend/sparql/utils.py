@@ -1,5 +1,6 @@
 import sys
 import re
+from rdflib import Literal
 
 
 def invalid_xml_remove(c):
@@ -40,3 +41,24 @@ def find_invalid_xml(c):
 
     illegal_xml_re = re.compile(u'[%s]' % u''.join(illegal_ranges))
     return re.search(illegal_xml_re, c)
+
+
+def is_cleanable(term):
+    return isinstance(term, Literal) and term.datatype is None
+
+
+def clean_term(term):
+    if not is_cleanable(term):
+        return term
+    return Literal(invalid_xml_remove(term))
+
+
+def xml_sanitize_triple(triple):
+    if any((isinstance(term, Literal) and term.datatype is None) for term in triple):
+        cleaned_terms = []
+        for term in triple:
+            cleaned_terms.append(clean_term(term))
+        cleaned_triple = tuple(cleaned_terms)
+        if cleaned_triple != triple:
+            return (True, cleaned_triple)
+    return (False, triple)
