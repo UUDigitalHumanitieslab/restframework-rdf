@@ -34,7 +34,7 @@ def is_cleanable(term):
 def clean_term(term):
     if not is_cleanable(term):
         return term
-    return Literal(invalid_xml_remove(term), lang=term.language)
+    return Literal(invalid_xml_remove(term.value), lang=term.language)
 
 
 def xml_sanitize_triple(triple):
