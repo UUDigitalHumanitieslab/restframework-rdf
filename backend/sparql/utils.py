@@ -2,6 +2,7 @@ import sys
 import re
 from rdflib import Literal
 
+# via http://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
 ILLEGAL_UNICHRS = [
         (0x00, 0x08), (0x0B, 0x1F), (0x7F, 0x84), (0x86, 0x9F),
         (0xD800, 0xDFFF), (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF),
@@ -19,7 +20,6 @@ ILLEGAL_XML_RE = re.compile(u'[%s]' % u''.join(ILLEGAL_RANGES))
 
 
 def invalid_xml_remove(c):
-    # via http://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
     return re.sub(ILLEGAL_XML_RE, ' ', c)
 
 

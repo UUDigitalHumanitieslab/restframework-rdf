@@ -2,8 +2,10 @@ from .utils import invalid_xml_remove
 import os.path as op
 
 HERE = op.dirname(op.abspath(__file__))
+
 INVALID_STR = '''La trilogie a en eet
 comptabilisé plus de 26 millions de vente.'''
+
 VALID_STR = '''La trilogie a en e et
 comptabilisé plus de 26 millions de vente.'''
 
@@ -39,7 +41,7 @@ def test_xml_sanitize():
 
 
 def test_sanitize_file():
-    fp1 = op.join(HERE, '1.txt')
+    fp1 = op.join(HERE, 'testfiles', '1.txt')
 
     with open(fp1, 'r') as f1:
         c1 = f1.read()
