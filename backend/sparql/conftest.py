@@ -157,3 +157,13 @@ def unsupported_queries():
     }
 
     return queries
+
+
+@pytest.fixture
+def blanknode_queries():
+    triples = (
+        ('[ :p "v" ]'),
+        ('[] :p "v"'),
+        ('_:b57 :p "v"'),
+    )
+    return ['INSERT DATA {{ {} }}'.format(t) for t in triples]

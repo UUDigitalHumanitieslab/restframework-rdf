@@ -2,6 +2,10 @@ import re
 
 from django.http.response import HttpResponseBase
 from pyparsing import ParseException
+from rdf.ns import HTTP, HTTPSC, RDF
+from rdf.renderers import TurtleRenderer
+from rdf.utils import graph_from_triples
+from rdf.views import custom_exception_handler as turtle_exception_handler
 from rdflib import BNode, Literal
 from rdflib.plugins.sparql.parser import parseUpdate
 from requests.exceptions import HTTPError
@@ -9,13 +13,10 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from rdf.ns import HTTP, HTTPSC, RDF
-from rdf.renderers import TurtleRenderer
-from rdf.utils import graph_from_triples
-from rdf.views import custom_exception_handler as turtle_exception_handler
-
-from .constants import UPDATE_NOT_SUPPORTED, UPDATE_NOT_SUPPORTED_PATTERN
-from .exceptions import NoParamError, NotSupportedSPARQLError, ParseSPARQLError
+from .constants import (BLANK_NODE_PATTERN, UPDATE_NOT_SUPPORTED,
+                        UPDATE_NOT_SUPPORTED_PATTERN)
+from .exceptions import (BlankNodeError, NoParamError, ParseSPARQLError,
+                         UnsupportedUpdateError)
 from .negotiation import SPARQLContentNegotiator
 from .permissions import SPARQLPermission
 
@@ -27,24 +28,35 @@ class SPARQLUpdateAPIView(APIView):
     def get_exception_handler(self):
         return turtle_exception_handler
 
-    def is_supported(self, updatestring):
+    def check_supported(self, updatestring):
         # check the entire string for unsupported keywords
         if re.match(UPDATE_NOT_SUPPORTED_PATTERN, updatestring):
             # do a dry-run parse of the updatestring
             parse_request = parseUpdate(updatestring).request
             # check if the parse contains any unsupported operations
+            if any(part.name in UPDATE_NOT_SUPPORTED for part in parse_request):
+                raise UnsupportedUpdateError(
+                    'Update operation is not supported.'
+                )
+                
+        # Do a quick check for blank nodes
+        if re.search(BLANK_NODE_PATTERN, updatestring):
+            parse_request = parseUpdate(updatestring).request
             for part in parse_request:
-                if part.name in UPDATE_NOT_SUPPORTED:
-                    return False
-        return True
+                if any(
+                        isinstance(term, BNode)
+                        for triple in part.quads.triples
+                        for term in triple
+                ):
+                    raise BlankNodeError()
+
+        return
 
     def execute_update(self, updatestring):
         graph = self.graph()
 
-        if not self.is_supported(updatestring):
-            raise NotSupportedSPARQLError('Update operation is not supported.')
-
         try:
+            self.check_supported(updatestring)
             return graph.update(updatestring)
         except ParseException as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails

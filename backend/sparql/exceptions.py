@@ -12,6 +12,11 @@ class ParseSPARQLError(ParseError):
     default_code = 'sparql_parse_error'
 
 
-class NotSupportedSPARQLError(ParseError):
+class UnsupportedUpdateError(ParseError):
     default_detail = 'SPARQL-Update operation not supported.'
-    default_code = 'sparql_not_supported'
+    default_code = 'sparql_unsupported_update'
+
+
+class BlankNodeError(ParseError):
+    default_detail = 'Blank nodes are not supported.'
+    default_code = 'sparql_blanknode'

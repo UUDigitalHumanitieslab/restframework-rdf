@@ -1,7 +1,10 @@
 import json
 
-from rdflib import Graph
+import pytest
 from rdf.utils import graph_from_triples
+from rdflib import Graph
+from .exceptions import BlankNodeError
+from .views import SPARQLUpdateAPIView
 
 QUERY_URL = '/sparql/nlp-ontology/query'
 UPDATE_URL = '/sparql/nlp-ontology/update'
@@ -138,3 +141,10 @@ def test_select_from(sparql_client, test_queries, ontologygraph_db, ontologygrap
                              HTTP_ACCEPT=accept_headers.turtle)
     assert res.status_code == 200
     assert len(Graph().parse(data=res.content, format='turtle')) == 3
+
+
+def test_blanknodes(blanknode_queries):
+    view = SPARQLUpdateAPIView()
+    for q in blanknode_queries:
+        with pytest.raises(BlankNodeError):
+            view.check_supported(q)
