@@ -6,12 +6,14 @@ an rdf_migrations module which should define a Migration class that
 derives from rdf.migrations.RDFMigration.
 """
 
+import logging
 from importlib import import_module
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from rdf.utils import append_triples, get_conjunctive_graph, prune_triples
 
-from rdf.utils import append_triples, prune_triples, get_conjunctive_graph
+logger = logging.getLogger('rdf')
 
 
 class Command(BaseCommand):
@@ -35,8 +37,13 @@ class Command(BaseCommand):
         """ Determine whether `pkg` has RDF migrations. If so, apply them. """
         try:
             migrations = import_module('.rdf_migrations', pkg_name)
+            if migrations:
+                logger.info(
+                    'Applying RDF migrations for {}...'.format(pkg_name))
             self.migrate_graph(migrations.Migration())
-            self.stdout.write('Applied RDF migrations for {}.'.format(pkg_name))
+            applied_msg = 'Applied RDF migrations for {}.'.format(pkg_name)
+            self.stdout.write(applied_msg)
+            logger.info(applied_msg)
         except ImportError:
             # Nothing to do, this package has no RDF migrations.
             pass
@@ -50,6 +57,8 @@ class Command(BaseCommand):
         desired = migration.desired()
         additions = desired - actual
         deletions = actual - desired
+        logger.info('{} additions, {} deletions.'.format(
+            len(additions), len(deletions)))
         predicates_present = set(actual.predicates())
         subjects_added = set(additions.subjects())
         subjects_deleted = set(deletions.subjects())
@@ -59,12 +68,15 @@ class Command(BaseCommand):
         adders = (migration.add_handlers.get(s) for s in subjects_added)
         for handler_name in filter(None, adders):
             getattr(migration, handler_name)(actual, conjunctive)
+            logger.info('Applied addition handler "{}".'.format(handler_name))
         deleters = (migration.remove_handlers.get(s) for s in subjects_deleted)
         for handler_name in filter(None, deleters):
             getattr(migration, handler_name)(actual, conjunctive)
+            logger.info('Applied deletion handler "{}".'.format(handler_name))
         prune_triples(actual, deletions)
         # Handle predicate presence
         presence_handlers = (migration.presence_handlers.get(s)
                              for s in predicates_present)
         for handler_name in filter(None, presence_handlers):
             getattr(migration, handler_name)(actual, conjunctive)
+            logger.info('Applied presence handler "{}".'.format(handler_name))
