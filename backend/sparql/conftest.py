@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission, User
 from rdflib import Literal
 
 from nlp_ontology import namespace as my
-from nlp_ontology.graph import graph
+from sources.graph import graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
 from sources.constants import SOURCES_NS

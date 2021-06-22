@@ -6,8 +6,8 @@ from rdflib import Graph
 from .exceptions import BlankNodeError
 from .views import SPARQLUpdateAPIView
 
-QUERY_URL = '/sparql/nlp-ontology/query'
-UPDATE_URL = '/sparql/nlp-ontology/update'
+QUERY_URL = '/sparql/source/query'
+UPDATE_URL = '/sparql/source/update'
 
 
 def check_content_type(response, content_type):
@@ -35,6 +35,7 @@ def test_ask(client, test_queries, ontologygraph_db):
     true_response = client.get(
         QUERY_URL, {'query': test_queries.ASK_TRUE})
     assert true_response.status_code == 200
+    print(true_response.content)
     assert json.loads(true_response.content.decode('utf8'))['boolean']
     assert check_content_type(true_response, 'application/sparql-results+json')
 
@@ -121,8 +122,8 @@ def test_delete(sparql_client, test_queries, ontologygraph_db):
 
 def test_select_from(sparql_client, test_queries, ontologygraph_db, ontologygraph, accept_headers):
     # Should not return results if querying a different endpoint
-    # Note that any triples in SOURCES_NS graph would be returned here
-    res = sparql_client.post('/sparql/source/query',
+    # Note that any triples in VOCAB_NS graph would be returned here
+    res = sparql_client.post('/sparql/vocab/query',
                              {'query': test_queries.SELECT_FROM_NLP},
                              HTTP_ACCEPT=accept_headers.turtle)
     assert res.status_code == 200

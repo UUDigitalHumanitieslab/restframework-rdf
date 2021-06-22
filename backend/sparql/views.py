@@ -9,7 +9,7 @@ from rdf.views import custom_exception_handler as turtle_exception_handler
 from rdflib import BNode, Literal
 from rdflib.plugins.sparql.parser import parseUpdate
 from requests.exceptions import HTTPError
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -38,7 +38,7 @@ class SPARQLUpdateAPIView(APIView):
                 raise UnsupportedUpdateError(
                     'Update operation is not supported.'
                 )
-                
+
         # Do a quick check for blank nodes
         if re.search(BLANK_NODE_PATTERN, updatestring):
             parse_request = parseUpdate(updatestring).request
@@ -57,8 +57,8 @@ class SPARQLUpdateAPIView(APIView):
 
         try:
             self.check_supported(updatestring)
-            return graph.update(updatestring)
-        except ParseException as p_e:
+            graph.update(updatestring)
+        except (ParseException, ParseError) as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
             raise ParseSPARQLError(p_e)
@@ -80,7 +80,6 @@ class SPARQLUpdateAPIView(APIView):
         if not sparql_string:
             # POST must contain an update
             raise NoParamError()
-
         blank = BNode()
         status = 200
         response = graph_from_triples(
@@ -91,8 +90,8 @@ class SPARQLUpdateAPIView(APIView):
                 (blank, HTTP.sc, HTTPSC.OK),
             )
         )
-
         self.execute_update(sparql_string)
+
         return Response(response)
 
     def graph(self):
