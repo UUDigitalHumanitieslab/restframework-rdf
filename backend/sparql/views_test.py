@@ -149,3 +149,11 @@ def test_blanknodes(blanknode_queries):
     for q in blanknode_queries:
         with pytest.raises(BlankNodeError):
             view.check_supported(q)
+
+
+def test_GET_body(sparql_client):
+    res = sparql_client.get(
+        QUERY_URL,
+        data={'query': 'some query'}
+    )
+    assert res.status_code == 400

@@ -169,6 +169,9 @@ class SPARQLQueryAPIView(APIView):
             on query type and header 'Accept.
         """
         sparql_string = request.query_params.get("query")
+        if request.data:
+            raise ParseSPARQLError(
+                "GET request should provide query in parameter, not request body.")
         query_results = self.execute_query(sparql_string)
 
         return Response(query_results)
