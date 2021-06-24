@@ -31,3 +31,28 @@ class TurtleRenderer(RDFLibRenderer):
     rdflib_args = {
         'format': 'turtle',
     }
+
+
+class RdfXMLRenderer(RDFLibRenderer):
+    media_type = 'application/rdf+xml'
+    format = 'xml'
+    rdflib_args = {
+        'format': 'xml',
+    }
+
+
+class JsonLdRenderer(RDFLibRenderer):
+    media_type = 'application/ld+json'
+    format = 'jsonld'
+    rdflib_args = {
+        'format': 'json-ld',
+    }
+
+
+class NTriplesRenderer(RDFLibRenderer):
+    media_type = 'application/n-triples'
+    format = 'nt'
+    rdflib_args = {
+        'format': 'nt',
+        'encoding': 'ascii'  # N-triples are always ascii encoded
+    }
