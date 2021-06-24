@@ -124,7 +124,10 @@ def accept_headers():
         'turtle': 'text/turtle',
         'sparql_json': 'application/sparql-results+json',
         'sparql_xml': 'application/sparql-results+xml',
-        'json': 'application/json'
+        'json': 'application/json',
+        'rdfxml': 'application/rdf+xml',
+        'ntriples': 'application/n-triples',
+        'jsonld': 'application/ld+json'
     }
     return SimpleNamespace(**values)
 

@@ -99,7 +99,8 @@ class SPARQLUpdateAPIView(APIView):
 
 
 class SPARQLQueryAPIView(APIView):
-    renderer_classes = (TurtleRenderer,)
+    renderer_classes = SPARQLContentNegotiator.rdf_renderers + \
+        SPARQLContentNegotiator.results_renderers
     content_negotiation_class = SPARQLContentNegotiator
 
     def get_exception_handler(self):

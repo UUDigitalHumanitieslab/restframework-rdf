@@ -156,3 +156,15 @@ def test_GET_body(sparql_client):
         data={'query': 'some query'}
     )
     assert res.status_code == 400
+
+
+def test_graph_negotiation(sparql_client, accept_headers, test_queries):
+    graph_headers = [accept_headers.rdfxml, accept_headers.ntriples,
+                     accept_headers.jsonld, accept_headers.turtle]
+
+    for gh in graph_headers:
+        accept = sparql_client.get(
+            QUERY_URL, {'query': test_queries.CONSTRUCT}, HTTP_ACCEPT=gh)
+        empty = sparql_client.get(QUERY_URL, HTTP_ACCEPT=gh)
+        assert accept.status_code == 200
+        assert empty.status_code == 200
