@@ -52,3 +52,11 @@ class QueryResultsXMLRenderer(RDFLibRenderer):
 
     def render(self, query_results, media_type=None, renderer_context=None):
         return query_results.serialize(format='xml')
+
+
+class QueryResultsCSVRenderer(RDFLibRenderer):
+    media_type = 'text/csv'
+    format = 'csv'
+    rdflib_args = {
+        'format': 'csv'
+    }

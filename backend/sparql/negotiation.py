@@ -1,12 +1,14 @@
 from rdf.renderers import (JsonLdRenderer, NTriplesRenderer, RdfXMLRenderer,
                            TurtleRenderer)
 from rest_framework.negotiation import DefaultContentNegotiation
-from sparql.renderers import QueryResultsJSONRenderer, QueryResultsXMLRenderer
+
+from .renderers import (QueryResultsCSVRenderer, QueryResultsJSONRenderer,
+                        QueryResultsXMLRenderer)
 
 
 class SPARQLContentNegotiator(DefaultContentNegotiation):
-    results_renderers = [QueryResultsJSONRenderer,
-                         QueryResultsXMLRenderer]
+    results_renderers = [QueryResultsJSONRenderer, QueryResultsXMLRenderer,
+                         QueryResultsCSVRenderer]
     rdf_renderers = [TurtleRenderer, RdfXMLRenderer,
                      JsonLdRenderer, NTriplesRenderer]
     querytype_accepts = {

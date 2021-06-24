@@ -124,6 +124,7 @@ def accept_headers():
         'turtle': 'text/turtle',
         'sparql_json': 'application/sparql-results+json',
         'sparql_xml': 'application/sparql-results+xml',
+        'sparql_csv': 'text/csv',
         'json': 'application/json',
         'rdfxml': 'application/rdf+xml',
         'ntriples': 'application/n-triples',

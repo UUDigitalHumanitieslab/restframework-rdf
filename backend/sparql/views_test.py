@@ -152,7 +152,8 @@ def test_graph_negotiation(sparql_client, accept_headers, test_queries):
 
 def test_result_negotiation(sparql_client, accept_headers, test_queries):
     ''' result headers should succeed for SELECT/ASK, fail for CONSTRUCT/DESCRIBE/empty'''
-    result_headers = [accept_headers.sparql_json, accept_headers.sparql_xml]
+    result_headers = [accept_headers.sparql_json, accept_headers.sparql_xml,
+                      accept_headers.sparql_csv]
     for h in result_headers:
         accept = sparql_client.get(
             QUERY_URL, {'query': test_queries.SELECT}, HTTP_ACCEPT=h)
