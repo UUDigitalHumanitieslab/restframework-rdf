@@ -63,29 +63,6 @@ def test_malformed(sparql_client, sparqlstore):
     assert malformed_update.status_code == 400
 
 
-def test_negotiation(client, ontologygraph_db, accept_headers, test_queries):
-    empty_get = client.get(QUERY_URL)
-    assert empty_get.status_code == 200
-    assert check_content_type(empty_get, accept_headers.turtle)
-
-    sparql_json_get = client.get(
-        QUERY_URL, {'query': test_queries.SELECT},
-        HTTP_ACCEPT=accept_headers.sparql_json)
-    assert sparql_json_get.status_code == 200
-    assert check_content_type(sparql_json_get, accept_headers.sparql_json)
-
-    sparql_xml_get = client.get(
-        QUERY_URL, {'query': test_queries.SELECT},
-        HTTP_ACCEPT=accept_headers.sparql_xml)
-    assert sparql_xml_get.status_code == 200
-    assert check_content_type(sparql_xml_get, accept_headers.sparql_xml)
-
-    json_get = client.get(
-        QUERY_URL, {'query': test_queries.SELECT},
-        HTTP_ACCEPT=accept_headers.json)
-    assert json_get.status_code == 406
-
-
 def test_permissions(client, sparql_user, test_queries, sparqlstore):
     res = client.post(UPDATE_URL, {'update': test_queries.INSERT})
     assert res.status_code == 403
@@ -123,24 +100,21 @@ def test_select_from(sparql_client, test_queries, ontologygraph_db, ontologygrap
     # Should not return results if querying a different endpoint
     # Note that any triples in VOCAB_NS graph would be returned here
     res = sparql_client.post('/sparql/vocab/query',
-                             {'query': test_queries.SELECT_FROM_NLP},
-                             HTTP_ACCEPT=accept_headers.turtle)
+                             {'query': test_queries.SELECT_FROM_NLP})
     assert res.status_code == 200
-    assert len(Graph().parse(data=res.content, format='turtle')) == 0
+    assert len(res.data) == 0
 
     # Should ignore FROM clause if endpoint and graph don't match
     res = sparql_client.post(QUERY_URL,
-                             {'query': test_queries.SELECT_FROM_SOURCES},
-                             HTTP_ACCEPT=accept_headers.turtle)
+                             {'query': test_queries.SELECT_FROM_SOURCES})
     assert res.status_code == 200
-    assert len(Graph().parse(data=res.content, format='turtle')) == 3
+    assert len(res.data) == 3
 
     # Should return results if FROM and endpoint match
     res = sparql_client.post(QUERY_URL,
-                             {'query': test_queries.SELECT_FROM_NLP},
-                             HTTP_ACCEPT=accept_headers.turtle)
+                             {'query': test_queries.SELECT_FROM_NLP})
     assert res.status_code == 200
-    assert len(Graph().parse(data=res.content, format='turtle')) == 3
+    assert len(res.data) == 3
 
 
 def test_blanknodes(blanknode_queries):
@@ -159,12 +133,39 @@ def test_GET_body(sparql_client):
 
 
 def test_graph_negotiation(sparql_client, accept_headers, test_queries):
+    ''' result headers should succeed for CONSTRUCT/DESRIBE/empty, fail for SELECT/ASK'''
     graph_headers = [accept_headers.rdfxml, accept_headers.ntriples,
                      accept_headers.jsonld, accept_headers.turtle]
 
-    for gh in graph_headers:
+    for h in graph_headers:
         accept = sparql_client.get(
-            QUERY_URL, {'query': test_queries.CONSTRUCT}, HTTP_ACCEPT=gh)
-        empty = sparql_client.get(QUERY_URL, HTTP_ACCEPT=gh)
+            QUERY_URL, {'query': test_queries.CONSTRUCT}, HTTP_ACCEPT=h)
+        deny = sparql_client.get(
+            QUERY_URL, {'query': test_queries.SELECT}, HTTP_ACCEPT=h)
+        empty = sparql_client.get(QUERY_URL, HTTP_ACCEPT=h)
         assert accept.status_code == 200
+        assert check_content_type(accept, h)
+        assert deny.status_code == 406
         assert empty.status_code == 200
+        assert check_content_type(empty, h)
+
+
+def test_result_negotiation(sparql_client, accept_headers, test_queries):
+    ''' result headers should succeed for SELECT/ASK, fail for CONSTRUCT/DESCRIBE/empty'''
+    result_headers = [accept_headers.sparql_json, accept_headers.sparql_xml]
+    for h in result_headers:
+        accept = sparql_client.get(
+            QUERY_URL, {'query': test_queries.SELECT}, HTTP_ACCEPT=h)
+        deny = sparql_client.get(
+            QUERY_URL, {'query': test_queries.CONSTRUCT}, HTTP_ACCEPT=h)
+        empty = sparql_client.get(QUERY_URL, HTTP_ACCEPT=h)
+        assert accept.status_code == 200
+        assert check_content_type(accept, h)
+        assert deny.status_code == 406
+        assert empty.status_code == 406
+
+    # application/json should not work
+    regular_json = sparql_client.get(
+        QUERY_URL, {'query': test_queries.SELECT},
+        HTTP_ACCEPT=accept_headers.json)
+    assert regular_json.status_code == 406

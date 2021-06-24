@@ -9,7 +9,7 @@ from rdf.views import custom_exception_handler as turtle_exception_handler
 from rdflib import BNode, Literal
 from rdflib.plugins.sparql.parser import parseUpdate
 from requests.exceptions import HTTPError
-from rest_framework.exceptions import APIException, ParseError
+from rest_framework.exceptions import APIException, NotAcceptable, ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -104,34 +104,13 @@ class SPARQLQueryAPIView(APIView):
     content_negotiation_class = SPARQLContentNegotiator
 
     def get_exception_handler(self):
+        ''' Errors are returned as turtle, even when the original querytype
+        does not satisfy could not be rendered in this format. A hard
+        overwrite of renderer is necessary. Ideally, this should render errors
+        in a querytype-compatibleway. '''
+        self.request.accepted_renderer = TurtleRenderer()
+        self.request.accepted_media_type = TurtleRenderer.media_type
         return turtle_exception_handler
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        """
-        Adapts APIView method to additionaly perform content negotation
-        when a query type was set
-        """
-        assert isinstance(response, HttpResponseBase), (
-            "Expected a `Response`, `HttpResponse` or `HttpStreamingResponse` "
-            "to be returned from the view, but received a `%s`" % type(
-                response)
-        )
-
-        if isinstance(response, Response):
-            # re-perform content negotiation if a query type was set
-            if not getattr(request, "accepted_renderer", None) or \
-                    self.request.data.get("query_type", None):
-                neg = self.perform_content_negotiation(request, force=True)
-                request.accepted_renderer, request.accepted_media_type = neg
-
-            response.accepted_renderer = request.accepted_renderer
-            response.accepted_media_type = request.accepted_media_type
-            response.renderer_context = self.get_renderer_context()
-
-        for key, value in self.headers.items():
-            response[key] = value
-
-        return response
 
     def execute_query(self, querystring):
         """ Attempt to query a graph with a SPARQL-Query string
@@ -146,6 +125,11 @@ class SPARQLQueryAPIView(APIView):
                 query_results = graph.query(querystring)
                 query_type = query_results.type
             self.request.data["query_type"] = query_type
+            
+            # re-perform content negotiation to determine if
+            # querytype satisfies accept header
+            neg = self.perform_content_negotiation(self.request)
+            self.request.accepted_renderer, self.request.accepted_media_type = neg
             return query_results
 
         except ParseException as p_e:
@@ -158,6 +142,9 @@ class SPARQLQueryAPIView(APIView):
                 raise ParseSPARQLError(h_e)
             else:
                 raise APIException(h_e)
+        except NotAcceptable:
+            graph.rollback()
+            raise
         except Exception as n_e:
             graph.rollback()
             raise APIException(n_e)
