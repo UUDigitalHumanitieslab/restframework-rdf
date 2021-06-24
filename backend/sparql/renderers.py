@@ -13,21 +13,7 @@ class QueryResultsTurtleRenderer(TurtleRenderer):
     ''' Renders turtle from rdflib SPARQL query results'''
 
     def render(self, query_results, media_type=None, renderer_context=None):
-        try:
-            results_graph = graph_from_triples(query_results)
-        except Exception as e:
-            ''' Hacky solution, because we are beyond generating the response.
-            Manually create an error response '''
-            blank = BNode()
-            results_graph = graph_from_triples(
-                (
-                    (blank, RDF.type, HTTP.Response),
-                    (blank, HTTP.statusCodeValue, Literal(400)),
-                    (blank, HTTP.reasonPhrase, Literal(str(e))),
-                    (blank, HTTP.sc, HTTPSC.BadRequest),
-                )
-            )
-            renderer_context['response'].status_code = 400
+        results_graph = graph_from_triples(query_results)
         return super().render(results_graph, media_type, renderer_context)
 
 
