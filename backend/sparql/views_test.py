@@ -14,7 +14,9 @@ def check_content_type(response, content_type):
     return content_type in response._headers['content-type'][1]
 
 
-def test_insert(sparql_client, ontologygraph, test_queries):
+def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
+    assert len(graph_db) == 0
+
     post_response = sparql_client.post(
         UPDATE_URL, {'update': test_queries.INSERT})
     assert post_response.status_code == 200
@@ -24,11 +26,13 @@ def test_insert(sparql_client, ontologygraph, test_queries):
     assert check_content_type(get_response, 'text/turtle')
 
     get_data = Graph().parse(data=get_response.content, format='turtle')
+    assert len(graph_db) != 0
     assert len(get_data ^ ontologygraph) == 0
 
     # clean up
     sparql_client.post(
         UPDATE_URL, {'update': test_queries.DELETE_DATA})
+    assert len(graph_db) == 0
 
 
 def test_ask(client, test_queries, ontologygraph_db):
@@ -80,7 +84,7 @@ def test_unsupported(sparql_client, unsupported_queries, sparqlstore):
         assert request.status_code == 400
 
 
-def test_delete(sparql_client, test_queries, ontologygraph_db):
+def test_delete(sparql_client, test_queries, ontologygraph_db, graph_db):
     # Should not delete if from another endpoint
     delete = sparql_client.post(
         '/sparql/source/update', {'update': test_queries.DELETE_FROM})
@@ -89,11 +93,13 @@ def test_delete(sparql_client, test_queries, ontologygraph_db):
     assert len(Graph().parse(data=res, format='turtle')) == 3
 
     # Should delete if endpoint and graph match
+    assert len(graph_db) != 2
     delete = sparql_client.post(
         UPDATE_URL, {'update': test_queries.DELETE})
     assert delete.status_code == 200
     res = sparql_client.get(QUERY_URL).content
     assert len(Graph().parse(data=res, format='turtle')) == 2
+    assert len(graph_db) == 2
 
 
 def test_select_from(sparql_client, test_queries, ontologygraph_db, ontologygraph, accept_headers):

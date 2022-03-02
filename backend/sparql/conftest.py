@@ -94,6 +94,11 @@ def ontologygraph(triples):
 
 
 @pytest.fixture
+def graph_db(db, sparqlstore):
+    return graph()
+
+
+@pytest.fixture
 def ontologygraph_db(db, ontologygraph, sparqlstore):
     g = graph()
     g += ontologygraph
