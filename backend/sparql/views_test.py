@@ -1,8 +1,11 @@
 import json
 
 import pytest
+from nlp_ontology import namespace as nlp
+from rdf.ns import SCHEMA
 from rdf.utils import graph_from_triples
-from rdflib import Graph
+from rdflib import XSD, Graph, Literal
+
 from .exceptions import BlankNodeError
 from .views import SPARQLUpdateAPIView
 
@@ -25,7 +28,7 @@ def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
     assert get_response.status_code == 200
     assert check_content_type(get_response, 'text/turtle')
 
-    get_data = Graph().parse(data=get_response.content, format='turtle')
+    get_data = Graph().parse(data=get_response.content, format='text/turtle')
     assert len(graph_db) != 0
     assert len(get_data ^ ontologygraph) == 0
 
@@ -48,12 +51,14 @@ def test_ask(client, test_queries, ontologygraph_db):
     assert not json.loads(false_response.content.decode('utf8'))['boolean']
 
 
-def test_construct(client, test_queries, ontologygraph_db, triples):
+def test_construct(client, test_queries, ontologygraph_db):
     response = client.get(QUERY_URL, {'query': test_queries.CONSTRUCT})
     assert response.status_code == 200
 
     result_graph = Graph().parse(data=response.content, format='turtle')
-    exp_graph = graph_from_triples([triples[2]])
+    exp_graph = graph_from_triples(
+        ((SCHEMA.Cat,    nlp.meow,        Literal("loud", datatype=XSD.string)),)
+    )
     assert len(exp_graph ^ result_graph) == 0
 
 

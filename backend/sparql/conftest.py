@@ -2,14 +2,13 @@ from types import SimpleNamespace
 
 import pytest
 from django.contrib.auth.models import Permission, User
-from rdflib import Literal
-
 from nlp_ontology import namespace as my
-from sources.graph import graph
+from nlp_ontology.constants import NLP_ONTOLOGY_NS
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
+from rdflib import Literal
 from sources.constants import SOURCES_NS
-from nlp_ontology.constants import NLP_ONTOLOGY_NS
+from sources.graph import graph
 
 INSERT_QUERY = '''
     PREFIX my: <http://testserver/nlp-ontology#>
@@ -83,7 +82,7 @@ def triples():
     return (
         (my.icecream,   RDF.type,       SCHEMA.Food),
         (my.icecream,   SCHEMA.color,   Literal("#f9e5bc")),
-        (SCHEMA.Cat,    my.meow,        Literal('loud')),
+        (SCHEMA.Cat,    my.meow,        Literal("loud")),
     )
 
 
