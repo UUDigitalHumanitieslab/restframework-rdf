@@ -9,6 +9,7 @@ from rdf.views import custom_exception_handler as turtle_exception_handler
 from rdflib import BNode, Literal
 from rdflib.plugins.sparql.parser import parseUpdate
 from requests.exceptions import HTTPError
+from urllib.error import HTTPError as urllibHTTPError
 from rest_framework.exceptions import APIException, NotAcceptable, ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -58,7 +59,7 @@ class SPARQLUpdateAPIView(APIView):
         try:
             self.check_supported(updatestring)
             graph.update(updatestring)
-        except (ParseException, ParseError) as p_e:
+        except (ParseException, ParseError, ValueError) as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
             raise ParseSPARQLError(p_e)
@@ -68,6 +69,12 @@ class SPARQLUpdateAPIView(APIView):
                 raise ParseSPARQLError(h_e)
             else:
                 raise APIException(h_e)
+        except urllibHTTPError as u_h_e:
+            graph.rollback()
+            if 400 <= u_h_e.code < 500:
+                raise ParseSPARQLError(u_h_e)
+            else:
+                raise APIException(u_h_e)
         except Exception as e:
             graph.rollback()
             raise APIException(e)
@@ -125,14 +132,14 @@ class SPARQLQueryAPIView(APIView):
                 query_results = graph.query(querystring)
                 query_type = query_results.type
             self.request.data["query_type"] = query_type
-            
+
             # re-perform content negotiation to determine if
             # querytype satisfies accept header
             neg = self.perform_content_negotiation(self.request)
             self.request.accepted_renderer, self.request.accepted_media_type = neg
             return query_results
 
-        except ParseException as p_e:
+        except (ParseException, ValueError) as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
             raise ParseSPARQLError(p_e)
@@ -142,6 +149,12 @@ class SPARQLQueryAPIView(APIView):
                 raise ParseSPARQLError(h_e)
             else:
                 raise APIException(h_e)
+        except urllibHTTPError as u_h_e:
+            graph.rollback()
+            if 400 <= u_h_e.code < 500:
+                raise ParseSPARQLError(u_h_e)
+            else:
+                raise APIException(u_h_e)
         except NotAcceptable:
             graph.rollback()
             raise
