@@ -14,7 +14,7 @@ UPDATE_URL = '/sparql/source/update'
 
 
 def check_content_type(response, content_type):
-    return content_type in response._headers['content-type'][1]
+    return content_type in response.headers['content-type']
 
 
 def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
