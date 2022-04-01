@@ -14,7 +14,7 @@ from rest_framework.exceptions import APIException, NotAcceptable, ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .constants import (BLANK_NODE_PATTERN, UPDATE_NOT_SUPPORTED,
+from .constants import (BLANK_NODE_PATTERN, SPARQL_NS, UPDATE_NOT_SUPPORTED,
                         UPDATE_NOT_SUPPORTED_PATTERN)
 from .exceptions import (BlankNodeError, NoParamError, ParseSPARQLError,
                          UnsupportedUpdateError)
@@ -57,8 +57,11 @@ class SPARQLUpdateAPIView(APIView):
         graph = self.graph()
 
         try:
+            # initNs provided as temporary workaround
+            # frontend provides default namespaces, and so does the backend
+            # resulting in double definitions -> bad request from blazegraph
             self.check_supported(updatestring)
-            graph.update(updatestring)
+            graph.update(updatestring, initNs={'readitsparql': SPARQL_NS})
         except (ParseException, ParseError, ValueError) as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
@@ -129,7 +132,9 @@ class SPARQLQueryAPIView(APIView):
                 query_results = graph
                 query_type = "EMPTY"
             else:
-                query_results = graph.query(querystring)
+                # See SPARQLUpdateAPIView.execute_update
+                query_results = graph.query(
+                    querystring, initNs={'readitsparql': SPARQL_NS})
                 query_type = query_results.type
             self.request.data["query_type"] = query_type
 
