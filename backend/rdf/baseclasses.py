@@ -1,8 +1,8 @@
-from django.db import models, DatabaseError
+from django.db import models
 from django.db.models import F
 from django.db.transaction import atomic
-# See https://docs.djangoproject.com/en/2.2/_modules/django/utils/decorators/
-from django.utils.decorators import classproperty
+# See https://docs.djangoproject.com/en/3.2/_modules/django/utils/functional
+from django.utils.functional import classproperty
 
 
 class BaseCounter(models.Model):
