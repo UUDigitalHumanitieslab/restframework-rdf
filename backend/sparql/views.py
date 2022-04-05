@@ -57,11 +57,8 @@ class SPARQLUpdateAPIView(APIView):
         graph = self.graph()
 
         try:
-            # initNs provided as temporary workaround
-            # frontend provides default namespaces, and so does the backend
-            # resulting in double definitions -> bad request from blazegraph
             self.check_supported(updatestring)
-            graph.update(updatestring, initNs={'readitsparql': SPARQL_NS})
+            graph.update(updatestring)
         except (ParseException, ParseError, ValueError) as p_e:
             # Raised when SPARQL syntax is not valid, or parsing fails
             graph.rollback()
@@ -134,7 +131,7 @@ class SPARQLQueryAPIView(APIView):
             else:
                 # See SPARQLUpdateAPIView.execute_update
                 query_results = graph.query(
-                    querystring, initNs={'readitsparql': SPARQL_NS})
+                    querystring)
                 query_type = query_results.type
             self.request.data["query_type"] = query_type
 
