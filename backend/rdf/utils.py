@@ -1,11 +1,13 @@
 import random
+import re
 
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from rdflib import Graph, ConjunctiveGraph, Literal, URIRef
-from rdflib_django.models import Store
 from items import namespace as ITEM
+from rdflib import ConjunctiveGraph, Graph, Literal, URIRef
+from rdflib.plugins.stores.sparqlstore import SPARQLStore
+from rdflib_django.models import Store
 
 
 def get_conjunctive_graph():
@@ -119,3 +121,31 @@ def traverse_backward(full_graph, fringe, plys):
         subjects = set(fringe.subjects()) - visited_subjects
         plys -= 1
     return result
+
+
+def patched_inject_prefixes(self, query, extra_bindings):
+    ''' Monkeypatch for SPARQLStore prefix bindings
+    Parses the incoming query for prefixes,
+    and ignores these when injecting additional namespaces.
+    Better implementation is possibly available,
+    e.g. use rdfblibs query parser to extract prefixes.
+    '''
+    prefix_pattern = re.compile(r'PREFIX\s+(\w+):\s*<\S+>', re.IGNORECASE)
+    query_prefixes = re.findall(prefix_pattern, query)
+
+    bindings = set(list(self.nsBindings.items()) +
+                   list(extra_bindings.items()))
+    bindings = {x for x in bindings if x[0] not in query_prefixes}
+
+    if not bindings:
+        return query
+    return "\n".join(
+        [
+            "\n".join(["PREFIX %s: <%s>" % (k, v) for k, v in bindings]),
+            "",  # separate ns_bindings from query with an empty line
+            query,
+        ]
+    )
+
+
+SPARQLStore._inject_prefixes = patched_inject_prefixes
