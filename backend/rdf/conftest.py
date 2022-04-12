@@ -1,11 +1,10 @@
 from importlib import import_module
 
-from pytest import fixture
-
-from rdflib import Graph, ConjunctiveGraph, Literal, URIRef
-
-from rdf.utils import graph_from_triples, prune_triples
 from items.conftest import TRIPLES as ITEMS
+from pytest import fixture
+from rdf.utils import graph_from_triples, prune_triples
+from rdflib import ConjunctiveGraph, Graph, Literal, URIRef
+
 from .ns import *
 
 MAGIC_NODE = URIRef('http://hogwarts.edu/')
@@ -35,6 +34,7 @@ def triples():
 def empty_graph():
     return Graph()
 
+
 @fixture
 def items():
     return ITEMS
@@ -43,6 +43,7 @@ def items():
 @fixture
 def filled_graph(triples):
     return graph_from_triples(triples)
+
 
 @fixture
 def filled_conjunctive_graph(items):
@@ -64,3 +65,10 @@ def app_with_rdf_migrations():
 def app_without_rdf_migrations():
     from .test_apps import without_migrations
     return without_migrations.__name__
+
+
+@fixture
+def prefixed_query():
+    return '''PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?s ?p ?o WHERE { ?s ?p ?o }'''

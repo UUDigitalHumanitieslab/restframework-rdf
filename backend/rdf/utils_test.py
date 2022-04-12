@@ -88,3 +88,17 @@ def test_traverse_backward(filled_graph, other_triples):
         new_size = len(result)
         assert new_size > size
         size = new_size
+
+
+def test_prefix_injection(sparqlstore, prefixed_query):
+    res = sparqlstore._inject_prefixes(prefixed_query, {})
+    assert res == prefixed_query
+
+    res = sparqlstore._inject_prefixes(
+        prefixed_query, extra_bindings={'rdf': 'https://cat-bounce.com'})
+
+    stripped_res = res.replace('\n', '')
+    stripped_query = prefixed_query.replace(
+        'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'https://cat-bounce.com').replace('\n', '')
+
+    assert stripped_res == stripped_query
