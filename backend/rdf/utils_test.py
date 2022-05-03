@@ -97,15 +97,17 @@ def test_traverse_backward(filled_graph, other_triples):
 
 
 def test_prefix_injection(sparqlstore, prefixed_query):
+    expected_prefixes = ['rdf', 'rdfs', 'schema']
+
     res = sparqlstore._inject_prefixes(prefixed_query, {})
-    prefixes = sorted(re.findall(PREFIX_PATTERN, res))
-    assert prefixes == sorted(['rdf', 'rdfs', 'schema'])
+    assert all(prefix in re.findall(PREFIX_PATTERN, res)
+               for prefix in expected_prefixes)
     assert 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>' in res
 
     res = sparqlstore._inject_prefixes(
         prefixed_query, extra_bindings={'rdf': 'https://cat-bounce.com',
                                         'schema': 'http://randomcolour.com/'})
-    prefixes = sorted(re.findall(PREFIX_PATTERN, res))
-    assert prefixes == sorted(['rdf', 'rdfs', 'schema'])
+    assert all(prefix in re.findall(PREFIX_PATTERN, res)
+               for prefix in expected_prefixes)
     assert 'PREFIX rdf: <https://cat-bounce.com>' in res
     assert 'PREFIX schema: <http://randomcolour.com/>' in res
