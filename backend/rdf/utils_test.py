@@ -5,6 +5,7 @@ from rdflib import Graph
 from .ns import *
 from .utils import *
 from items import namespace as ITEM
+import re
 
 
 @pytest.fixture
@@ -97,9 +98,14 @@ def test_traverse_backward(filled_graph, other_triples):
 
 def test_prefix_injection(sparqlstore, prefixed_query):
     res = sparqlstore._inject_prefixes(prefixed_query, {})
+    prefixes = sorted(re.findall(PREFIX_PATTERN, res))
+    assert prefixes == sorted(['rdf', 'rdfs', 'schema'])
     assert 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>' in res
 
     res = sparqlstore._inject_prefixes(
-        prefixed_query, extra_bindings={'rdf': 'https://cat-bounce.com'})
-
+        prefixed_query, extra_bindings={'rdf': 'https://cat-bounce.com',
+                                        'schema': 'http://randomcolour.com/'})
+    prefixes = sorted(re.findall(PREFIX_PATTERN, res))
+    assert prefixes == sorted(['rdf', 'rdfs', 'schema'])
     assert 'PREFIX rdf: <https://cat-bounce.com>' in res
+    assert 'PREFIX schema: <http://randomcolour.com/>' in res

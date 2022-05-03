@@ -69,6 +69,9 @@ def app_without_rdf_migrations():
 
 @fixture
 def prefixed_query():
-    return '''PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    return '''
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    SELECT ?s ?p ?o WHERE { ?s ?p ?o }'''
+    PREFIX schema: <http://www.schema.org/>
+    SELECT ?s ?p ?o WHERE { ?s ?p ?o }
+    '''
