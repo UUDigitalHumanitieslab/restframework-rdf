@@ -130,8 +130,7 @@ class SPARQLQueryAPIView(APIView):
                 query_type = "EMPTY"
             else:
                 # See SPARQLUpdateAPIView.execute_update
-                query_results = graph.query(
-                    querystring)
+                query_results = graph.query(querystring)
                 query_type = query_results.type
             self.request.data["query_type"] = query_type
 
