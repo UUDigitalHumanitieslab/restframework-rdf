@@ -31,7 +31,8 @@ def prune_triples_cascade(graph, triples, graphs_applied_to=[], privileged_predi
     """
     for triple in triples:
         prune_recursively(
-            graph, triple[0], graphs_applied_to, privileged_predicates)
+            graph, triple[0], graphs_applied_to, privileged_predicates
+        )
 
 
 def prune_recursively(graph, subject, graphs_applied_to=[], privileged_predicates=[]):
