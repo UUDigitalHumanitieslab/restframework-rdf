@@ -1,13 +1,15 @@
 import random
 import re
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from django.conf import settings
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
-from items import namespace as ITEM
 from rdflib import ConjunctiveGraph, Graph, Literal, URIRef
 from rdflib.plugins.stores.sparqlstore import SPARQLStore
-from rdflib_django.models import Store
+from rdflib.plugins.stores.sparqlconnector import (
+    SPARQLConnector, SPARQLConnectorException, _response_mime_types)
+from typing import Optional
+
 
 PREFIX_PATTERN = re.compile(r'PREFIX\s+(\w+):\s*<\S+>', re.IGNORECASE)
 
@@ -163,4 +165,43 @@ def patched_inject_prefixes(self, query, extra_bindings):
     )
 
 
+def patched_sparqlconnector_update(self, query,
+                                   default_graph: Optional[str] = None,
+                                   named_graph: Optional[str] = None):
+    '''Monkeypatch for SPARQLConnector's update method
+    Changes Content-Type header to include utf-8 charset
+    '''
+    if not self.update_endpoint:
+        raise SPARQLConnectorException("Query endpoint not set!")
+
+    params = {}
+
+    if default_graph is not None:
+        params["using-graph-uri"] = default_graph
+
+    if named_graph is not None:
+        params["using-named-graph-uri"] = named_graph
+
+    # Single difference from original method, changing Content-Type header
+    headers = {
+        "Accept": _response_mime_types[self.returnFormat],
+        "Content-Type": "application/sparql-update; charset=utf-8",
+    }
+
+    args = dict(self.kwargs)  # other QSAs
+
+    args.setdefault("params", {})
+    args["params"].update(params)
+    args.setdefault("headers", {})
+    args["headers"].update(headers)
+
+    qsa = "?" + urlencode(args["params"])
+    res = urlopen(
+        Request(self.update_endpoint + qsa, data=query.encode(),
+                headers=args["headers"])
+    )
+
+
+# Apply monkeypatches
 SPARQLStore._inject_prefixes = patched_inject_prefixes
+SPARQLConnector.update = patched_sparqlconnector_update
