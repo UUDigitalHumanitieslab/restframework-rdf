@@ -9,7 +9,7 @@ from rdflib.plugins.stores.sparqlstore import SPARQLStore
 from rdflib.plugins.stores.sparqlconnector import (
     SPARQLConnector, SPARQLConnectorException, _response_mime_types)
 from typing import Optional
-from .ns import XSD, DCTERMS
+from .ns import OA, XSD, DCTERMS
 
 
 PREFIX_PATTERN = re.compile(r'PREFIX\s+(\w+):\s*<\S+>', re.IGNORECASE)
@@ -157,6 +157,29 @@ def find_latin1_triples(graph: Graph) -> Graph:
     print(f'found {len(g)} latin-1 triples in graph {graph.identifier}')
     return g
 
+
+def find_latin1_preannos(graph: Graph, source_graph: Graph) -> Graph:
+    query = r'''CONSTRUCT {{?selector ?pred ?obj}}
+    WHERE {{
+        GRAPH <{}> {{
+            ?s oa:hasTarget ?target .
+            ?target oa:hasSource ?source ;
+            oa:hasSelector ?selector .
+            ?selector ?pred ?obj
+            FILTER(datatype(?obj)=xsd:string)
+            FILTER(regex(?obj, "[\\x80-\\xFF]"))
+
+        }}
+        GRAPH <{}> {{
+            ?source dcterms:created ?date .
+            FILTER(?date > "2022-05-10T00:00:00.000000+00:00"^^xsd:dateTime)
+        }}
+    }}
+    '''.format(graph.identifier, source_graph.identifier)
+    res = graph.query(query, initNs={'xsd': XSD, 'dcterms': DCTERMS, 'oa': OA})
+    g = graph_from_triples(res)
+    print(f'found {len(g)} latin-1 triples in graph {graph.identifier}')
+    return g
 
 def recode_latin1_triples(g: Graph, latin1_triples: Graph, commit=False) -> None:
     '''Find and recodes latin1-encoded strings to utf-8
