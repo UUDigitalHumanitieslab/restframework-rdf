@@ -111,3 +111,12 @@ def test_prefix_injection(sparqlstore, prefixed_query):
                for prefix in expected_prefixes)
     assert 'PREFIX rdf: <https://cat-bounce.com>' in res
     assert 'PREFIX schema: <http://randomcolour.com/>' in res
+
+
+def test_charset_update(sparqlstore):
+    problematic_triple = (RDF.type, RDFS.label, Literal('Février'))
+    sparqlstore.add(problematic_triple)
+
+    # If the triple is properly stored, it can be retrieved
+    # otherwise it will be stored as 'FÃ©vrier'
+    assert next(sparqlstore.triples(problematic_triple), None)

@@ -1,13 +1,16 @@
 import random
 import re
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from django.conf import settings
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
-from items import namespace as ITEM
 from rdflib import ConjunctiveGraph, Graph, Literal, URIRef
 from rdflib.plugins.stores.sparqlstore import SPARQLStore
-from rdflib_django.models import Store
+from rdflib.plugins.stores.sparqlconnector import (
+    SPARQLConnector, SPARQLConnectorException, _response_mime_types)
+from typing import Optional
+from .ns import OA, XSD, DCTERMS
+
 
 PREFIX_PATTERN = re.compile(r'PREFIX\s+(\w+):\s*<\S+>', re.IGNORECASE)
 
@@ -130,6 +133,73 @@ def traverse_backward(full_graph, fringe, plys):
     return result
 
 
+def latin1_to_utf8(original: str) -> str:
+    try:
+        return original.encode('latin-1').decode()
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        return original
+
+
+def find_latin1_triples(graph: Graph) -> Graph:
+    query = r'''CONSTRUCT {{?s ?p ?o }}
+    WHERE {{
+        GRAPH <{}> {{
+            ?s ?p ?o;
+            dcterms:created ?date .
+            FILTER(?date > "2022-05-10T00:00:00.000000+00:00"^^xsd:dateTime)
+            FILTER(datatype(?o)=xsd:string)
+            FILTER(regex(?o, "[\\x80-\\xFF]"))
+        }}
+    }}
+    '''.format(graph.identifier)
+    res = graph.query(query, initNs={'xsd': XSD, 'dcterms': DCTERMS})
+    g = graph_from_triples(res)
+    print(f'found {len(g)} latin-1 triples in graph {graph.identifier}')
+    return g
+
+
+def find_latin1_preannos(graph: Graph, source_graph: Graph) -> Graph:
+    query = r'''CONSTRUCT {{?selector ?pred ?obj}}
+    WHERE {{
+        GRAPH <{}> {{
+            ?s oa:hasTarget ?target .
+            ?target oa:hasSource ?source ;
+            oa:hasSelector ?selector .
+            ?selector ?pred ?obj
+            FILTER(datatype(?obj)=xsd:string)
+            FILTER(regex(?obj, "[\\x80-\\xFF]"))
+
+        }}
+        GRAPH <{}> {{
+            ?source dcterms:created ?date .
+            FILTER(?date > "2022-05-10T00:00:00.000000+00:00"^^xsd:dateTime)
+        }}
+    }}
+    '''.format(graph.identifier, source_graph.identifier)
+    res = graph.query(query, initNs={'xsd': XSD, 'dcterms': DCTERMS, 'oa': OA})
+    g = graph_from_triples(res)
+    print(f'found {len(g)} latin-1 triples in graph {graph.identifier}')
+    return g
+
+def recode_latin1_triples(g: Graph, latin1_triples: Graph, commit=False) -> None:
+    '''Find and recodes latin1-encoded strings to utf-8
+    If commit, also replace them in the triplestore.
+    '''
+    cnt = 0
+    for (s, p, o) in latin1_triples:
+        recoded = latin1_to_utf8(o)
+        if o != recoded:
+            if not commit:
+                # manual sanity check
+                print(o)
+                print(recoded)
+                print('---')
+            else:
+                g.add((s, p, Literal(recoded)))
+                g.remove((s, p, o))
+                cnt += 1
+    print(f'updated {cnt} triples')
+
 def patched_inject_prefixes(self, query, extra_bindings):
     ''' Monkeypatch for SPARQLStore prefix injection
     Parses the incoming query for prefixes,
@@ -163,4 +233,43 @@ def patched_inject_prefixes(self, query, extra_bindings):
     )
 
 
+def patched_sparqlconnector_update(self, query,
+                                   default_graph: Optional[str] = None,
+                                   named_graph: Optional[str] = None):
+    '''Monkeypatch for SPARQLConnector's update method
+    Changes Content-Type header to include utf-8 charset
+    '''
+    if not self.update_endpoint:
+        raise SPARQLConnectorException("Query endpoint not set!")
+
+    params = {}
+
+    if default_graph is not None:
+        params["using-graph-uri"] = default_graph
+
+    if named_graph is not None:
+        params["using-named-graph-uri"] = named_graph
+
+    # Single difference from original method, changing Content-Type header
+    headers = {
+        "Accept": _response_mime_types[self.returnFormat],
+        "Content-Type": "application/sparql-update; charset=utf-8",
+    }
+
+    args = dict(self.kwargs)  # other QSAs
+
+    args.setdefault("params", {})
+    args["params"].update(params)
+    args.setdefault("headers", {})
+    args["headers"].update(headers)
+
+    qsa = "?" + urlencode(args["params"])
+    res = urlopen(
+        Request(self.update_endpoint + qsa, data=query.encode(),
+                headers=args["headers"])
+    )
+
+
+# Apply monkeypatches
 SPARQLStore._inject_prefixes = patched_inject_prefixes
+SPARQLConnector.update = patched_sparqlconnector_update
