@@ -9,6 +9,7 @@ from rdflib.plugins.stores.sparqlstore import SPARQLStore
 from rdflib.plugins.stores.sparqlconnector import (
     SPARQLConnector, SPARQLConnectorException, _response_mime_types)
 from typing import Optional
+from .ns import XSD, DCTERMS
 
 
 PREFIX_PATTERN = re.compile(r'PREFIX\s+(\w+):\s*<\S+>', re.IGNORECASE)
@@ -131,6 +132,50 @@ def traverse_backward(full_graph, fringe, plys):
         plys -= 1
     return result
 
+
+def latin1_to_utf8(original: str) -> str:
+    try:
+        return original.encode('latin-1').decode()
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        return original
+
+
+def find_latin1_triples(graph: Graph) -> Graph:
+    query = r'''CONSTRUCT {{?s ?p ?o }}
+    WHERE {{
+        GRAPH <{}> {{
+            ?s ?p ?o;
+            dcterms:created ?date .
+            FILTER(?date > "2022-05-10T00:00:00.000000+00:00"^^xsd:dateTime)
+            FILTER(datatype(?o)=xsd:string)
+            FILTER(regex(?o, "[\\x80-\\xFF]"))
+        }}
+    }}
+    '''.format(graph.identifier)
+    res = graph.query(query, initNs={'xsd': XSD, 'dcterms': DCTERMS})
+    g = graph_from_triples(res)
+    print(f'found {len(g)} latin-1 triples in graph {graph.identifier}')
+    return g
+
+
+def recode_latin1_triples(g: Graph, latin1_triples: Graph, commit=False) -> None:
+    '''Find and recodes latin1-encoded strings to utf-8
+    If commit, also replace them in the triplestore.
+    '''
+    cnt = 0
+    for (s, p, o) in latin1_triples:
+        recoded = latin1_to_utf8(o)
+        if o != recoded:
+            if not commit:
+                # manual sanity check
+                print(o)
+                print(recoded)
+                print('---')
+            else:
+                g.add((s, p, Literal(recoded)))
+                g.remove((s, p, o))
+                cnt += 1
+    print(f'updated {cnt} triples')
 
 def patched_inject_prefixes(self, query, extra_bindings):
     ''' Monkeypatch for SPARQLStore prefix injection
