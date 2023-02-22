@@ -136,8 +136,8 @@ def prefixed_query():
     '''
 
 def pytest_configure():
-    triplestore_namespace = 'readit-test',
-    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql',
+    triplestore_namespace = 'readit-test'
+    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql'
 
     settings.configure(
         DATABASES = {
