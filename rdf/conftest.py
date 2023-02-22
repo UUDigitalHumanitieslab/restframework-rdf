@@ -142,11 +142,8 @@ def pytest_configure():
     settings.configure(
         DATABASES = {
             'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': 'readit',
-                'USER': 'readit',
-                'PASSWORD': 'readit',
-                'HOST': 'localhost',
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': 'rdf-test',
             }
         },
         REST_FRAMEWORK = {
