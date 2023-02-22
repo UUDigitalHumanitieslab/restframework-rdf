@@ -140,6 +140,15 @@ def pytest_configure():
     triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql',
 
     settings.configure(
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'readit',
+                'USER': 'readit',
+                'PASSWORD': 'readit',
+                'HOST': 'localhost',
+            }
+        },
         REST_FRAMEWORK = {
             'DEFAULT_AUTHENTICATION_CLASSES': [
                 'readit.authentication.CsrfExemptSessionAuthentication',

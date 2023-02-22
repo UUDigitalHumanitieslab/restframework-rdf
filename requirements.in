@@ -3,3 +3,4 @@ django>=3.2,<4
 rdflib>6
 pytest
 pytest-django
+psycopg2
