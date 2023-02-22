@@ -146,12 +146,7 @@ def pytest_configure():
                 'NAME': 'rdf-test',
             }
         },
-        REST_FRAMEWORK = {
-            'DEFAULT_AUTHENTICATION_CLASSES': [
-                'readit.authentication.CsrfExemptSessionAuthentication',
-                'rest_framework.authentication.TokenAuthentication',
-            ]
-        },
+        REST_FRAMEWORK = {},
         RDFLIB_STORE = SPARQLUpdateStore(
             query_endpoint=triplestore_sparql_endpoint,
             update_endpoint=triplestore_sparql_endpoint,
