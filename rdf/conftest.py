@@ -1,11 +1,70 @@
 from importlib import import_module
+from datetime import datetime, date
 
-from items.conftest import TRIPLES as ITEMS
+from django.conf import settings
 from pytest import fixture
 from rdf.utils import graph_from_triples, prune_triples
+from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
 from rdflib import ConjunctiveGraph, Graph, Literal, URIRef
 
 from .ns import *
+
+CREATION_DATE = Literal(datetime.now())
+
+ITEM = Namespace('http://localhost:8000/item/')
+STAFF = Namespace('http://localhost:8000/staff#')
+ONTO = Namespace('http://localhost:8000/ontology#')
+SOURCE = Namespace('http://localhost:8000/source/')
+
+ITEMS = (
+    ( ITEM['1'], RDF.type,              OA.TextQuoteSelector               ),
+    ( ITEM['1'], OA.prefix,             Literal('this is the start of ')   ),
+    ( ITEM['1'], OA.exact,              Literal('the exact selection')     ),
+    ( ITEM['1'], OA.suffix,             Literal(' and this is the end')    ),
+    ( ITEM['1'], DCTERMS.creator,       STAFF.tester                       ),
+    ( ITEM['1'], DCTERMS.created,       CREATION_DATE                      ),
+
+    # Items 2 and 3 dropped out because we once used a custom range selector
+    # with two OA.XPathSelectors.
+
+    ( ITEM['4'], RDF.type,              OA.TextPositionSelector            ),
+    ( ITEM['4'], OA.start,              Literal(22)                        ),
+    ( ITEM['4'], OA.end,                Literal(41)                        ),
+    ( ITEM['4'], DCTERMS.creator,       STAFF.tester                       ),
+    ( ITEM['4'], DCTERMS.created,       CREATION_DATE                      ),
+
+    ( ITEM['5'], RDF.type,              OA.SpecificResource                ),
+    ( ITEM['5'], OA.hasSource,          SOURCE['1']                        ),
+    ( ITEM['5'], OA.hasSelector,        ITEM['4']                          ),
+    ( ITEM['5'], OA.hasSelector,        ITEM['1']                          ),
+    ( ITEM['5'], DCTERMS.creator,       STAFF.tester                       ),
+    ( ITEM['5'], DCTERMS.created,       CREATION_DATE                      ),
+
+    ( ITEM['6'], RDF.type,              ONTO.reader                        ),
+    ( ITEM['6'], SKOS.prefLabel,        Literal('Margaret Blessington')    ),
+    ( ITEM['6'], ONTO.is_identified_by, Literal('Margaret Gardiner Blessington') ),
+    ( ITEM['6'], ONTO.is_identified_by, Literal('Marguerite Gardiner, countess of Blessington') ),
+    ( ITEM['6'], ONTO.has_gender,       Literal('female')                  ),
+    ( ITEM['6'], ONTO.has_occupation,   Literal('novelist')                ),
+    ( ITEM['6'], ONTO.has_occupation,   Literal('writer')                  ),
+    ( ITEM['6'], ONTO.has_nationality,  Literal('Irish')                   ),
+    ( ITEM['6'], CIDOC.was_born,        Literal(date(1789, 9, 1))          ),
+    ( ITEM['6'], CIDOC.died,            Literal(date(1849, 6, 4))          ),
+    ( ITEM['6'], OWL.sameAs,            URIRef('https://en.wikipedia.org/wiki/Marguerite_Gardiner,_Countess_of_Blessington') ),
+    ( ITEM['6'], DCTERMS.type,          Literal('example data')            ),
+    ( ITEM['6'], DCTERMS.creator,       STAFF.tester                       ),
+    ( ITEM['6'], DCTERMS.created,       CREATION_DATE                      ),
+
+    ( ITEM['7'], RDF.type,              OA.Annotation                      ),
+    ( ITEM['7'], OA.hasBody,            ONTO.reader                        ),
+    ( ITEM['7'], OA.hasBody,            ITEM['6']                          ),
+    ( ITEM['7'], OA.hasTarget,          ITEM['5']                          ),
+    ( ITEM['7'], OA.motivatedBy,        OA.tagging                         ),
+    ( ITEM['7'], OA.motivatedBy,        OA.identifying                     ),
+    ( ITEM['7'], DCTERMS.creator,       STAFF.tester                       ),
+    ( ITEM['7'], DCTERMS.created,       CREATION_DATE                      ),
+)
+
 
 MAGIC_NODE = URIRef('http://hogwarts.edu/')
 
@@ -75,3 +134,36 @@ def prefixed_query():
     PREFIX schema: <http://www.schema.org/>
     SELECT ?s ?p ?o WHERE { ?s ?p ?o }
     '''
+
+def pytest_configure():
+    triplestore_namespace = 'readit-test'
+    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql'
+
+    settings.configure(
+        REST_FRAMEWORK = {
+            'DEFAULT_AUTHENTICATION_CLASSES': [
+                'readit.authentication.CsrfExemptSessionAuthentication',
+                'rest_framework.authentication.TokenAuthentication',
+            ]
+        },
+        RDFLIB_STORE = SPARQLUpdateStore(
+            query_endpoint=triplestore_sparql_endpoint,
+            update_endpoint=triplestore_sparql_endpoint,
+        )
+    )
+
+HAS_TRIPLES = '''
+ASK {
+    GRAPH ?g {
+        ?s ?p ?o
+    }
+}
+'''
+
+@fixture
+def sparqlstore(settings):
+    store = settings.RDFLIB_STORE
+    assert not store.query(HAS_TRIPLES)
+    yield store
+    store.update('CLEAR ALL')
+
