@@ -49,7 +49,7 @@ Visit the [web interface]( http://localhost:9999), navigate to the `NAMESPACES` 
 ### Running unit tests
 
 1. Clone this repository
-2. Install the required python packages via `pip install -r requirements.in`
+2. Install the required python packages via `pip install -r requirements.txt`
 3. Make sure your blazegraph server is running (see above).
 4. Run the unit tests with `pytest`.
 
