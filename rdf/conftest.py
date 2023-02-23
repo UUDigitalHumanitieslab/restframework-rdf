@@ -24,8 +24,7 @@ ITEMS = (
     ( ITEM['1'], DCTERMS.creator,       STAFF.tester                       ),
     ( ITEM['1'], DCTERMS.created,       CREATION_DATE                      ),
 
-    # Items 2 and 3 dropped out because we once used a custom range selector
-    # with two OA.XPathSelectors.
+    # Items 2 and 3 dropped out for historical reasons.
 
     ( ITEM['4'], RDF.type,              OA.TextPositionSelector            ),
     ( ITEM['4'], OA.start,              Literal(22)                        ),
