@@ -5,8 +5,12 @@ plugins:
 nav:
   - 'index.md'
   - 'getting-started.md'
-  - API reference:
+  - Reference:
     - 'migrations.md'
     - 'namespaces.md'
     - 'parsers.md'
+    - 'renderers.md'
     - 'views.md'
+    - 'utility-functions.md'
+watch:
+  - docs
