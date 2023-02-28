@@ -4,3 +4,4 @@ rdflib>6
 pytest
 pytest-django
 mkdocs
+mkdocstrings-python
