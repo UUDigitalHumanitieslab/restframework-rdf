@@ -1,1 +1,10 @@
-site_name: My Docs
+site_name: restframework-rdf
+repo_url: https://github.com/UUDigitalHumanitieslab/restframework-rdf
+nav:
+  - 'index.md'
+  - 'getting-started.md'
+  - API reference:
+    - 'migrations.md'
+    - 'namespaces.md'
+    - 'parsers.md'
+    - 'views.md'
