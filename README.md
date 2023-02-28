@@ -67,3 +67,14 @@ To install the package in your project, install via pip as
 ```bash
 pip install path/to/repository/dist/restframework-drf-*.targ.gz
 ```
+
+### Documentation
+
+Documentation (in the `docs` directory) is based on [MkDocs](https://www.mkdocs.org/).
+
+You can browse the documentation in a development server by running
+
+```bash
+mkdocs serve
+```
+
