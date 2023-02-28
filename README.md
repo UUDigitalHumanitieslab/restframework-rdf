@@ -4,34 +4,7 @@ A django app for integration between RDF and django rest framework.
 
 ## Quick start
 
-To include this app in your django project, install the package via pip, then do the following.
-
-1. Add `'rdf'` to your INSTALLED_APPS setting like this:
-
-```python
-INSTALLED_APPS = [
-    ...
-    'rdf',
-]
-```
-
-2. Determine the endpoint for sparql queries to your triple store. For example, if you are using blazegraph with namespace 'foo' in local development, the endpoint for both querying and updating would be `'http://localhost:9999/blazegraph/namespace/foo/sparql'`
-
-3. Add the following to your settings file:
-
-```python
-from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
-
-TRIPLESTORE_SPARQL_QUERY_ENDPOINT = '...' # fill in the endpoint url
-TRIPLESTORE_SPARQL_UPDATE_ENDPOINT = '...' # fill in the endpoint url
-
-RDFLIB_STORE = SPARQLUpdateStore(
-    query_endpoint=TRIPLESTORE_SPARQL_QUERY_ENDPOINT,
-    update_endpoint=TRIPLESTORE_SPARQL_UPDATE_ENDPOINT,
-)
-```
-
-Note that you may want to use a different endpoint for unit tests.
+Follow the [getting started guide](/docs/getting-started.md) to use the app in a django project.
 
 ## Development and unit tests
 
