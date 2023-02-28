@@ -4,7 +4,7 @@ from rdflib import Graph
 
 from .ns import *
 from .utils import *
-from items import namespace as ITEM
+from .conftest import ITEM
 import re
 
 
