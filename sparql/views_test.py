@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from nlp_ontology import namespace as nlp
 from rdf.ns import SCHEMA
+from rdflib.namespace import Namespace
 from rdf.utils import graph_from_triples
 from rdflib import XSD, Graph, Literal
 
@@ -12,6 +12,7 @@ from .views import SPARQLUpdateAPIView
 QUERY_URL = '/sparql/source/query'
 UPDATE_URL = '/sparql/source/update'
 
+nlp = Namespace('{}{}#'.format('http://localhost:8000/', 'nlp-ontology'))
 
 def check_content_type(response, content_type):
     return content_type in response.headers['content-type']
