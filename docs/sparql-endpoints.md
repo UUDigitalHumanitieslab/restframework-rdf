@@ -18,6 +18,8 @@ SPARQL_ENDPOINTS = [
         'graph': foo_graph,
         'query': True,
         'update': True,
+        'query_permissions': None,
+        'update_permissions': [IsAdmin],
     },
     {
         'route': 'bar',
@@ -42,3 +44,5 @@ def foo_graph():
 It is recommended that you use your configured store setting (see the [getting started guide](/getting-started)) in the graph constructor: `Graph(store = settings.RDFLIB_STORE)`
 
 The _query_ and _update_ items control whether query and update endpoints should be added, respectively. (You should set at least one of these to `True` if you want something to happen.)
+
+The *query_permissions* and *update_permissions* keys are optional: they can be left out or set to `None`. If defined, they should be a list/tuple of permission classes based on the the Django REST framework. See the [documentation on permissions](https://www.django-rest-framework.org/api-guide/permissions/).

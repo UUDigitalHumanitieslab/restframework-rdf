@@ -11,7 +11,10 @@ def sparql_query_view(endpoint_setting):
     '''
 
     graph = endpoint_setting['graph']
+    permissions = endpoint_setting.get('query_permissions', None) or []
+
     class QueryView(SPARQLQueryAPIView):
+        permission_classes = permissions
         def graph(self):
             return graph()
 
@@ -25,7 +28,10 @@ def sparql_update_view(endpoint_setting):
     '''
 
     graph = endpoint_setting['graph']
+    permissions = endpoint_setting.get('update_permissions', None) or []
+
     class UpdateView(SPARQLUpdateAPIView):
+        permission_classes = permissions
 
         def graph(self):
             return graph()

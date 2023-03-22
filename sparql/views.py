@@ -19,12 +19,11 @@ from .constants import (BLANK_NODE_PATTERN, SPARQL_NS, UPDATE_NOT_SUPPORTED,
 from .exceptions import (BlankNodeError, NoParamError, ParseSPARQLError,
                          UnsupportedUpdateError)
 from .negotiation import SPARQLContentNegotiator
-from .permissions import SPARQLPermission
+
 
 
 class SPARQLUpdateAPIView(APIView):
     renderer_classes = (TurtleRenderer,)
-    permission_classes = (SPARQLPermission,)
 
     def get_exception_handler(self):
         return turtle_exception_handler
