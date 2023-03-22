@@ -5,6 +5,8 @@ plugins:
 nav:
   - 'index.md'
   - 'getting-started.md'
+  - Usage:
+    - 'sparql-endpoints.md'
   - Reference:
     - 'migrations.md'
     - 'namespaces.md'
