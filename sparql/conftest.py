@@ -1,14 +1,53 @@
 from types import SimpleNamespace
 
 import pytest
-from django.contrib.auth.models import Permission, User
-from nlp_ontology import namespace as my
-from nlp_ontology.constants import NLP_ONTOLOGY_NS
+from django.conf import settings
+from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
+from rdflib import Namespace
+from rdflib import Graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
 from rdflib import Literal
-from sources.constants import SOURCES_NS
-from sources.graph import graph
+from rdf.conftest import sparqlstore
+
+def pytest_configure():
+    triplestore_namespace = 'rdf-test'
+    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql'
+
+    settings.configure(
+        SECRET_KEY='secret',
+        ROOT_URLCONF='sparql.urls',
+        INSTALLED_APPS = [
+            'django.contrib.auth',
+            'django.contrib.sessions',
+            'django.contrib.contenttypes',
+        ],
+        RDF_NAMESPACE_ROOT = 'http://localhost:8000/',
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': 'rdf-test',
+            }
+        },
+        REST_FRAMEWORK = {},
+        RDFLIB_STORE = SPARQLUpdateStore(
+            query_endpoint=triplestore_sparql_endpoint,
+            update_endpoint=triplestore_sparql_endpoint,
+        ),
+        SPARQL_ENDPOINTS = [
+        
+        ],
+    )
+
+NLP_ONTOLOGY_NS =  '{}{}#'.format('http://localhost:8000/', 'nlp-ontology')
+
+nlp = Namespace(NLP_ONTOLOGY_NS)
+
+SOURCES_NS = Namespace('{}{}#'.format('http://localhost:8000/', 'source/'))
+
+@pytest.fixture()
+def sources_graph(settings):
+    return lambda : Graph(settings.RDFLIB_STORE, SOURCES_NS)
 
 INSERT_QUERY = '''
     PREFIX my: <http://testserver/nlp-ontology#>
@@ -80,9 +119,9 @@ DELETE_FROM_QUERY = '''
 @pytest.fixture
 def triples():
     return (
-        (my.icecream,   RDF.type,       SCHEMA.Food),
-        (my.icecream,   SCHEMA.color,   Literal("#f9e5bc")),
-        (SCHEMA.Cat,    my.meow,        Literal("loud")),
+        (nlp.icecream,   RDF.type,       SCHEMA.Food),
+        (nlp.icecream,   SCHEMA.color,   Literal("#f9e5bc")),
+        (SCHEMA.Cat,    nlp.meow,        Literal("loud")),
     )
 
 
@@ -93,13 +132,13 @@ def ontologygraph(triples):
 
 
 @pytest.fixture
-def graph_db(db, sparqlstore):
-    return graph()
+def graph_db(db, sparqlstore, sources_graph):
+    return sources_graph()
 
 
 @pytest.fixture
-def ontologygraph_db(db, ontologygraph, sparqlstore):
-    g = graph()
+def ontologygraph_db(db, ontologygraph, sources_graph, sparqlstore):
+    g = sources_graph()
     g += ontologygraph
     yield
     g -= ontologygraph
@@ -139,8 +178,17 @@ def accept_headers():
 
 @pytest.fixture
 def sparql_user(db):
+    # import need to happen after set setup because they require django settings
+    from django.contrib.auth.models import Permission, User
+    from django.contrib.contenttypes.models import ContentType
+
     user = User.objects.create_user(username='john', password='')
-    update_perm = Permission.objects.get(codename='sparql_update')
+    content_type = ContentType.objects.get_for_model(User) # should be rdflib_djang.models.Store
+    update_perm = Permission.objects.create(
+        name='Can SPARQL-Update',
+        content_type=content_type,
+        codename='sparql_update'
+    )
     user.user_permissions.add(update_perm)
     return user
 

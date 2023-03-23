@@ -8,11 +8,11 @@ from rdflib import XSD, Graph, Literal
 
 from .exceptions import BlankNodeError
 from .views import SPARQLUpdateAPIView
+from .conftest import nlp
 
 QUERY_URL = '/sparql/source/query'
 UPDATE_URL = '/sparql/source/update'
 
-nlp = Namespace('{}{}#'.format('http://localhost:8000/', 'nlp-ontology'))
 
 def check_content_type(response, content_type):
     return content_type in response.headers['content-type']
