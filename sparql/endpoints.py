@@ -2,6 +2,38 @@ from django.conf import settings
 from django.urls import path
 from .views import SPARQLQueryAPIView, SPARQLUpdateAPIView
 from itertools import chain
+from django.core.exceptions import ImproperlyConfigured
+from importlib import import_module
+
+def import_object(name):
+    '''
+    Given a name like 'foo.bar.baz', import the object named 'baz' from module 'foo.bar'
+    '''
+    parts = name.split('.')
+    if '.' not in name:
+        raise ImproperlyConfigured(
+            f'The path to graph "{name}" should at least contain a module and an object name'
+        )
+    module_name = '.'.join(parts[:-1])
+    object_name = parts[-1]
+    module = import_module(module_name)
+    module.__
+    return getattr(module, object_name)
+
+
+def import_graph(endpoint_setting):
+    '''Import the graph object based on the endpoint setting'''
+    name = endpoint_setting['graph']
+    return import_object(name)
+
+def import_permissions(endpoint_setting, action):
+    '''Import permissions based on an endpoint setting. Parameter `action` 
+    should be either `'update'` or `'query'`, and determines whether to import 
+    permissions from `'update_permissions'` or `'query_permissions'`, respectively.
+    '''
+    key = f'{action}_permissions'
+    names = endpoint_setting.get(key, None) or []
+    return [import_object(name) for name in names]
 
 def sparql_query_view(endpoint_setting):
     '''
@@ -10,8 +42,8 @@ def sparql_query_view(endpoint_setting):
     Returns a subclass `SPARQLQueryAPIView that uses the configured graph object.
     '''
 
-    graph = endpoint_setting['graph']
-    permissions = endpoint_setting.get('query_permissions', None) or []
+    graph = import_graph(endpoint_setting)
+    permissions = import_permissions(endpoint_setting, 'query')
 
     class QueryView(SPARQLQueryAPIView):
         permission_classes = permissions
@@ -27,8 +59,8 @@ def sparql_update_view(endpoint_setting):
     Returns a subclass `SPARQLUpdateAPIView that uses the configured graph object.
     '''
 
-    graph = endpoint_setting['graph']
-    permissions = endpoint_setting.get('update_permissions', None) or []
+    graph = import_graph(endpoint_setting)
+    permissions = import_permissions(endpoint_setting, 'update')
 
     class UpdateView(SPARQLUpdateAPIView):
         permission_classes = permissions
