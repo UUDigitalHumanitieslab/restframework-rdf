@@ -8,7 +8,7 @@ from rdflib import XSD, Graph, Literal
 
 from .exceptions import BlankNodeError
 from .views import SPARQLUpdateAPIView
-from .test_apps.test_app.views import QueryView, UpdateView
+from .test_app.views import QueryView, UpdateView
 from .conftest import nlp
 
 from rest_framework.test import APIRequestFactory

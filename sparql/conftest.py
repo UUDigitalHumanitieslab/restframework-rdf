@@ -16,7 +16,7 @@ def pytest_configure():
 
     settings.configure(
         SECRET_KEY='secret',
-        ROOT_URLCONF='sparql.test_apps.test_app.urls',
+        ROOT_URLCONF='sparql.test_app.urls',
         INSTALLED_APPS = [
             'django.contrib.auth',
             'django.contrib.sessions',
@@ -192,7 +192,7 @@ def sparql_client(client, sparql_user):
 
 @pytest.fixture
 def app():
-    from .test_apps import test_app
+    from sparql import test_app
     return test_app.__name__
 
 @pytest.fixture
