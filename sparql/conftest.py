@@ -16,7 +16,7 @@ def pytest_configure():
 
     settings.configure(
         SECRET_KEY='secret',
-        ROOT_URLCONF='sparql.urls',
+        ROOT_URLCONF='sparql.test_apps.test_app.urls',
         INSTALLED_APPS = [
             'django.contrib.auth',
             'django.contrib.sessions',
@@ -178,26 +178,22 @@ def accept_headers():
 
 @pytest.fixture
 def sparql_user(db):
-    # import need to happen after set setup because they require django settings
-    from django.contrib.auth.models import Permission, User
-    from django.contrib.contenttypes.models import ContentType
+    # import needs to happen after set setup because it requires django settings
+    from django.contrib.auth.models import User
 
-    user = User.objects.create_user(username='john', password='')
-    content_type = ContentType.objects.get_for_model(User) # should be rdflib_djang.models.Store
-    update_perm = Permission.objects.create(
-        name='Can SPARQL-Update',
-        content_type=content_type,
-        codename='sparql_update'
-    )
-    user.user_permissions.add(update_perm)
+    # use is_staff = true to give permission for update endpoints in the test app
+    user = User.objects.create_user(username='john', password='', is_staff=True)
     return user
-
 
 @pytest.fixture
 def sparql_client(client, sparql_user):
     client.login(username=sparql_user.username, password='')
     return client
 
+@pytest.fixture
+def app():
+    from .test_apps import test_app
+    return test_app.__name__
 
 @pytest.fixture
 def unsupported_queries():
@@ -223,3 +219,4 @@ def blanknode_queries():
         ('_:b57 :p "v"'),
     )
     return ['INSERT DATA {{ {} }}'.format(t) for t in triples]
+
