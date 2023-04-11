@@ -1,0 +1,17 @@
+site_name: restframework-rdf
+repo_url: https://github.com/UUDigitalHumanitieslab/restframework-rdf
+plugins:
+  - mkdocstrings
+nav:
+  - 'index.md'
+  - 'getting-started.md'
+  - Reference:
+    - 'migrations.md'
+    - 'namespaces.md'
+    - 'parsers.md'
+    - 'renderers.md'
+    - 'views.md'
+    - 'utility-functions.md'
+watch:
+  - docs
+  - rdf
