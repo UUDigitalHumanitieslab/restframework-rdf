@@ -9,6 +9,7 @@ from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
 from rdflib import Literal
 from rdf.conftest import sparqlstore
+from sparql.test_app.graph import graph, SOURCES_NS
 
 def pytest_configure():
     triplestore_namespace = 'rdf-test'
@@ -39,15 +40,9 @@ def pytest_configure():
         ],
     )
 
-NLP_ONTOLOGY_NS =  '{}{}#'.format('http://localhost:8000/', 'nlp-ontology')
+NLP_ONTOLOGY_NS =  '{}{}#'.format('http://testserver/', 'nlp-ontology')
 
 nlp = Namespace(NLP_ONTOLOGY_NS)
-
-SOURCES_NS = Namespace('{}{}#'.format('http://localhost:8000/', 'source/'))
-
-@pytest.fixture()
-def sources_graph(settings):
-    return lambda : Graph(settings.RDFLIB_STORE, SOURCES_NS)
 
 INSERT_QUERY = '''
     PREFIX my: <http://testserver/nlp-ontology#>
@@ -132,13 +127,13 @@ def ontologygraph(triples):
 
 
 @pytest.fixture
-def graph_db(db, sparqlstore, sources_graph):
-    return sources_graph()
+def graph_db(db, sparqlstore):
+    return graph()
 
 
 @pytest.fixture
-def ontologygraph_db(db, ontologygraph, sources_graph, sparqlstore):
-    g = sources_graph()
+def ontologygraph_db(db, ontologygraph, sparqlstore):
+    g = graph()
     g += ontologygraph
     yield
     g -= ontologygraph

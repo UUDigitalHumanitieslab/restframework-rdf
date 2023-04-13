@@ -13,14 +13,11 @@ from .conftest import nlp
 
 from rest_framework.test import APIRequestFactory
 
-QUERY_URL = '/sparql/source/query'
-UPDATE_URL = '/sparql/source/update'
-
+QUERY_URL = '/test/query'
+UPDATE_URL = '/test/update'
 
 @pytest.fixture
 def request_factory():
-    from rest_framework.test import APIRequestFactory
-    
     return APIRequestFactory()
 
 def check_content_type(response, content_type):
@@ -47,23 +44,17 @@ def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
         UPDATE_URL, {'update': test_queries.DELETE_DATA})
     assert len(graph_db) == 0
 
-def test_query(request_factory, test_queries, ontologygraph_db):
+def test_ask(request_factory, test_queries, ontologygraph_db):
     view = QueryView.as_view()
-    request = request_factory.get('/test/query', {'query': test_queries.ASK_TRUE})
-    true_response = view(request).render()
+    true_request = request_factory.get(QUERY_URL, {'query': test_queries.ASK_TRUE})
+    true_response = view(true_request).render()
     assert true_response.status_code == 200
     assert json.loads(true_response.content.decode('utf8'))['boolean']
     assert check_content_type(true_response, 'application/sparql-results+json')
 
-def test_ask(client, test_queries, ontologygraph_db):
-    true_response = client.get(
-        QUERY_URL, {'query': test_queries.ASK_TRUE})
-    assert true_response.status_code == 200
-    assert json.loads(true_response.content.decode('utf8'))['boolean']
-    assert check_content_type(true_response, 'application/sparql-results+json')
-
-    false_response = client.get(
+    false_request = request_factory.get(
         QUERY_URL, {'query': test_queries.ASK_FALSE})
+    false_response = view(false_request).render()
     assert false_response.status_code == 200
     assert not json.loads(false_response.content.decode('utf8'))['boolean']
 
