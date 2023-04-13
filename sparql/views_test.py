@@ -30,11 +30,11 @@ class MockClient:
         self.view = view_class.as_view()
 
     def get(self, path, data = None, **kwargs):
-        request = self.request_factory.get(path, data, **kwargs)
+        request = self.request_factory.get(path, data, content_type='application/json', **kwargs)
         return self.view(request).render()
 
     def post(self, path, data = None, **kwargs):
-        request = self.request_factory.post(path, data, **kwargs)
+        request = self.request_factory.post(path, data, content_type='application/json', **kwargs)
         return self.view(request).render()
 
 @pytest.fixture
