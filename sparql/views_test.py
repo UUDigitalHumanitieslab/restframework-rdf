@@ -34,8 +34,7 @@ class MockClient:
 
     def post(self, path, data = None, **kwargs):
         request = self.request_factory.post(path, data, **kwargs)
-        response = self.view(request)
-        return response.render()
+        return self.view(request).render()
 
 @pytest.fixture
 def query_client():

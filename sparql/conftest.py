@@ -3,8 +3,6 @@ from types import SimpleNamespace
 import pytest
 from django.conf import settings
 from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
-from rdflib import Namespace
-from rdflib import Graph
 from rdf.ns import RDF, SCHEMA
 from rdf.utils import graph_from_triples
 from rdflib import Literal
@@ -18,7 +16,6 @@ def pytest_configure():
 
     settings.configure(
         SECRET_KEY='secret',
-        ROOT_URLCONF='sparql.test_app.urls',
         INSTALLED_APPS = [
             'django.contrib.auth',
             'django.contrib.sessions',
@@ -31,14 +28,10 @@ def pytest_configure():
                 'NAME': 'rdf-test',
             }
         },
-        REST_FRAMEWORK = {},
         RDFLIB_STORE = SPARQLUpdateStore(
             query_endpoint=triplestore_sparql_endpoint,
             update_endpoint=triplestore_sparql_endpoint,
         ),
-        SPARQL_ENDPOINTS = [
-        
-        ],
     )
 
 
@@ -167,22 +160,6 @@ def accept_headers():
         'jsonld': 'application/ld+json'
     }
     return SimpleNamespace(**values)
-
-
-@pytest.fixture
-def sparql_user(db):
-    # import needs to happen after set setup because it requires django settings
-    from django.contrib.auth.models import User
-
-    # use is_staff = true to give permission for update endpoints in the test app
-    user = User.objects.create_user(username='john', password='', is_staff=True)
-    return user
-
-
-@pytest.fixture
-def app():
-    from sparql import test_app
-    return test_app.__name__
 
 @pytest.fixture
 def unsupported_queries():
