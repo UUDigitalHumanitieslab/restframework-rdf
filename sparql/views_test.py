@@ -16,13 +16,37 @@ from rest_framework.test import APIRequestFactory
 QUERY_URL = '/test/query'
 UPDATE_URL = '/test/update'
 
+
+class MockClient:
+    '''
+    Class used to test a view. Can be used like the 
+    api test client, but calls the view directly,
+    without routing or permissions.
+    '''
+
+    request_factory = APIRequestFactory()
+
+    def __init__(self, view_class):
+        self.view = view_class.as_view()
+
+    def get(self, path, data = None):
+        request = self.request_factory.get(path, data)
+        return self.view(request).render()
+
+    def post(self, path, data = None):
+        request = self.request_factory.post(path, data)
+        return self.view(request).render()
+
 @pytest.fixture
-def request_factory():
-    return APIRequestFactory()
+def query_client():
+    return MockClient(QueryView)
+
+@pytest.fixture
+def update_client():
+    return MockClient(UpdateView)
 
 def check_content_type(response, content_type):
     return content_type in response.headers['content-type']
-
 
 def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
     assert len(graph_db) == 0
@@ -44,17 +68,15 @@ def test_insert(sparql_client, ontologygraph, test_queries, graph_db):
         UPDATE_URL, {'update': test_queries.DELETE_DATA})
     assert len(graph_db) == 0
 
-def test_ask(request_factory, test_queries, ontologygraph_db):
-    view = QueryView.as_view()
-    true_request = request_factory.get(QUERY_URL, {'query': test_queries.ASK_TRUE})
-    true_response = view(true_request).render()
+
+def test_ask(query_client, test_queries, ontologygraph_db):
+    true_response = query_client.get(QUERY_URL, {'query': test_queries.ASK_TRUE})
     assert true_response.status_code == 200
     assert json.loads(true_response.content.decode('utf8'))['boolean']
     assert check_content_type(true_response, 'application/sparql-results+json')
 
-    false_request = request_factory.get(
+    false_response = query_client.get(
         QUERY_URL, {'query': test_queries.ASK_FALSE})
-    false_response = view(false_request).render()
     assert false_response.status_code == 200
     assert not json.loads(false_response.content.decode('utf8'))['boolean']
 
