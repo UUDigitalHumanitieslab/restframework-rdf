@@ -10,30 +10,6 @@ from rdf.conftest import sparqlstore
 from sparql.test_app.graphs import sources_graph as graph
 from sparql.test_app.constants import *
 
-def pytest_configure():
-    triplestore_namespace = 'rdf-test'
-    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql'
-
-    settings.configure(
-        SECRET_KEY='secret',
-        INSTALLED_APPS = [
-            'django.contrib.auth',
-            'django.contrib.sessions',
-            'django.contrib.contenttypes',
-        ],
-        RDF_NAMESPACE_ROOT = 'http://localhost:8000/',
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'rdf-test',
-            }
-        },
-        RDFLIB_STORE = SPARQLUpdateStore(
-            query_endpoint=triplestore_sparql_endpoint,
-            update_endpoint=triplestore_sparql_endpoint,
-        ),
-    )
-
 
 INSERT_QUERY = '''
     PREFIX my: <http://testserver/nlp-ontology#>
