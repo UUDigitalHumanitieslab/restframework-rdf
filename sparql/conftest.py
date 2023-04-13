@@ -180,10 +180,6 @@ def sparql_user(db):
     user = User.objects.create_user(username='john', password='', is_staff=True)
     return user
 
-@pytest.fixture
-def sparql_client(client, sparql_user):
-    client.login(username=sparql_user.username, password='')
-    return client
 
 @pytest.fixture
 def app():
