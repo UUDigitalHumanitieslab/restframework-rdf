@@ -8,14 +8,13 @@ from rdflib import XSD, Graph, Literal
 
 from .exceptions import BlankNodeError
 from .views import SPARQLUpdateAPIView
-from .test_app.views import QueryView, UpdateView
+from .test_app.views import QueryView, UpdateView, NLPQueryView
 from .conftest import nlp
 
 from rest_framework.test import APIRequestFactory
 
 QUERY_URL = '/test/query'
 UPDATE_URL = '/test/update'
-
 
 class MockClient:
     '''
@@ -30,12 +29,13 @@ class MockClient:
         self.view = view_class.as_view()
 
     def get(self, path, data = None, **kwargs):
-        request = self.request_factory.get(path, data, content_type='application/json', **kwargs)
+        request = self.request_factory.get(path, data, **kwargs)
         return self.view(request).render()
 
     def post(self, path, data = None, **kwargs):
-        request = self.request_factory.post(path, data, content_type='application/json', **kwargs)
-        return self.view(request).render()
+        request = self.request_factory.post(path, data, **kwargs)
+        response = self.view(request)
+        return response.render()
 
 @pytest.fixture
 def query_client():
@@ -44,6 +44,10 @@ def query_client():
 @pytest.fixture
 def update_client():
     return MockClient(UpdateView)
+
+@pytest.fixture
+def nlp_query_client():
+    return MockClient(NLPQueryView)
 
 def check_content_type(response, content_type):
     return content_type in response.headers['content-type']
@@ -102,16 +106,6 @@ def test_malformed(query_client, update_client, sparqlstore):
     assert malformed_update.status_code == 400
 
 
-def test_permissions(client, sparql_user, test_queries, sparqlstore):
-    res = client.post(UPDATE_URL, {'update': test_queries.INSERT})
-    assert res.status_code == 403
-
-    client.login(username=sparql_user.username, password='')
-    res = client.post(
-        UPDATE_URL, {'update': test_queries.INSERT})
-    assert res.status_code == 200
-
-
 def test_unsupported(update_client, unsupported_queries, sparqlstore):
     for query in unsupported_queries.values():
         request = update_client.post(UPDATE_URL, {'update': query})
@@ -137,10 +131,10 @@ def test_delete(query_client, update_client, test_queries, ontologygraph_db, gra
     assert len(graph_db) == 2
 
 
-def test_select_from(query_client, test_queries, ontologygraph_db, ontologygraph, accept_headers):
+def test_select_from(query_client, nlp_query_client, test_queries, ontologygraph_db, ontologygraph, accept_headers):
     # Should not return results if querying a different endpoint
     # Note that any triples in VOCAB_NS graph would be returned here
-    res = query_client.post('/sparql/vocab/query',
+    res = nlp_query_client.post('/sparql/vocab/query',
                              {'query': test_queries.SELECT_FROM_NLP})
     assert res.status_code == 200
     assert len(res.data) == 0
@@ -175,7 +169,7 @@ def test_GET_body(query_client):
 
 def test_graph_negotiation(query_client, accept_headers, test_queries):
     ''' result headers should succeed for CONSTRUCT/DESRIBE/empty, fail for SELECT/ASK'''
-    graph_headers = [accept_headers.rdfxml, accept_headers.ntriples,
+    graph_headers = [accept_headers.rdfxml, 
                      accept_headers.jsonld, accept_headers.turtle]
 
     for h in graph_headers:

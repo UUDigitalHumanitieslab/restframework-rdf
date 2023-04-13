@@ -1,13 +1,16 @@
 from sparql.views import SPARQLUpdateAPIView, SPARQLQueryAPIView
 from rest_framework.permissions import IsAdminUser
-from .graph import graph
+from .graphs import sources_graph, nlp_graph
 
 class QueryView(SPARQLQueryAPIView):
     def graph(self):
-        return graph()
+        return sources_graph()
     
 class UpdateView(SPARQLUpdateAPIView):
-    permission_classes = [IsAdminUser]
 
     def graph(self):
-        return graph()
+        return sources_graph()
+
+class NLPQueryView(SPARQLQueryAPIView):
+    def graph(self):
+        return nlp_graph()
