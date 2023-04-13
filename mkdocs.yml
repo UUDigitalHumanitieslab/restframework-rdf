@@ -17,3 +17,4 @@ nav:
 watch:
   - docs
   - rdf
+  - sparql
