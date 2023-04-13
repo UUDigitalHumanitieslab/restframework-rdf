@@ -23,6 +23,10 @@ from .negotiation import SPARQLContentNegotiator
 
 
 class SPARQLUpdateAPIView(APIView):
+    '''
+    Parent class for an SPARL update request.
+    '''
+    
     renderer_classes = (TurtleRenderer,)
 
     def get_exception_handler(self):
@@ -105,6 +109,10 @@ class SPARQLUpdateAPIView(APIView):
 
 
 class SPARQLQueryAPIView(APIView):
+    '''
+    Parent class for a SPARQL query request.
+    '''
+    
     renderer_classes = SPARQLContentNegotiator.rdf_renderers + \
         SPARQLContentNegotiator.results_renderers
     content_negotiation_class = SPARQLContentNegotiator

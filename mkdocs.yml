@@ -5,15 +5,17 @@ plugins:
 nav:
   - 'index.md'
   - 'getting-started.md'
-  - Usage:
-    - 'sparql-endpoints.md'
-  - Reference:
-    - 'migrations.md'
-    - 'namespaces.md'
-    - 'parsers.md'
-    - 'renderers.md'
-    - 'views.md'
-    - 'utility-functions.md'
+  - RDF:
+    - 'rdf/migrations.md'
+    - 'rdf/namespaces.md'
+    - 'rdf/parsers.md'
+    - 'rdf/renderers.md'
+    - 'rdf/views.md'
+    - 'rdf/utility-functions.md'
+  - SPARQL:
+    - 'sparql/making-sparql-endpoints.md'
+    - 'sparql/views.md'
+    - 'sparql/renderers.md'
 watch:
   - docs
   - rdf
