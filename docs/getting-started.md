@@ -12,12 +12,13 @@ pip install restframework-drf
 
 To include this app in your django project, do the following.
 
-Add `'rdf'` to your INSTALLED_APPS setting like this:
+Add `'rdf'` and/or `'sparql'` to your INSTALLED_APPS setting like this:
 
 ```python
 INSTALLED_APPS = [
     ...
     'rdf',
+    'sparql',
 ]
 ```
 
