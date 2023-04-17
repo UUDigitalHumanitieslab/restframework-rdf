@@ -5,7 +5,7 @@
 Install the restframework-rdf package via pip.
 
 ```bash
-pip install restframework-drf
+pip install restframework-rdf
 ```
 
 ## Django project configuration
