@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/restframework-rdf/badge/?version=latest)](https://restframework-rdf.readthedocs.io/en/latest/?badge=latest)
+      
 # restframework-rdf
 
 A django app for integration between RDF and django rest framework.
