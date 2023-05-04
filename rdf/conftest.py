@@ -134,23 +134,6 @@ def prefixed_query():
     SELECT ?s ?p ?o WHERE { ?s ?p ?o }
     '''
 
-def pytest_configure():
-    triplestore_namespace = 'rdf-test'
-    triplestore_sparql_endpoint = f'http://localhost:9999/blazegraph/namespace/{triplestore_namespace}/sparql'
-
-    settings.configure(
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': 'rdf-test',
-            }
-        },
-        REST_FRAMEWORK = {},
-        RDFLIB_STORE = SPARQLUpdateStore(
-            query_endpoint=triplestore_sparql_endpoint,
-            update_endpoint=triplestore_sparql_endpoint,
-        )
-    )
 
 HAS_TRIPLES = '''
 ASK {
@@ -163,6 +146,7 @@ ASK {
 @fixture
 def sparqlstore(settings):
     store = settings.RDFLIB_STORE
+    store.update('CLEAR ALL')
     assert not store.query(HAS_TRIPLES)
     yield store
     store.update('CLEAR ALL')
