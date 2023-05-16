@@ -18,16 +18,10 @@ django==3.2.18
     #   djangorestframework
 djangorestframework==3.14.0
     # via -r requirements.in
-exceptiongroup==1.1.0
-    # via pytest
 ghp-import==2.1.0
     # via mkdocs
 griffe==0.25.5
     # via mkdocstrings-python
-importlib-metadata==6.0.0
-    # via
-    #   markdown
-    #   mkdocs
 iniconfig==2.0.0
     # via pytest
 isodate==0.6.1
@@ -65,7 +59,7 @@ packaging==23.0
     #   pytest
 pluggy==1.0.0
     # via pytest
-pymdown-extensions==9.9.2
+pymdown-extensions==10.0
     # via mkdocstrings
 pyparsing==3.0.9
     # via rdflib
@@ -84,6 +78,7 @@ pytz==2022.7.1
 pyyaml==6.0
     # via
     #   mkdocs
+    #   pymdown-extensions
     #   pyyaml-env-tag
 pyyaml-env-tag==0.1
     # via mkdocs
@@ -95,12 +90,8 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.3
     # via django
-tomli==2.0.1
-    # via pytest
 watchdog==2.3.1
     # via mkdocs
-zipp==3.15.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
