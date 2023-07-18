@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: restframework-rdf
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: 'Research Software Lab, Centre for Digital Humanities, Utrecht University'
+    website: 'https://cdh.uu.nl/centre-for-digital-humanities/research-software-lab/'
+    email: cdh@uu.nl
+    city: Utrecht
+    country: NL
+license: BSD-3-Clause
+repository-code: https://github.com/UUDigitalHumanitieslab/restframework-rdf
+version: 1.0.1

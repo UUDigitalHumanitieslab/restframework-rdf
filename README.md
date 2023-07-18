@@ -1,10 +1,20 @@
+[![Documentation Status](https://readthedocs.org/projects/restframework-rdf/badge/?version=latest)](https://restframework-rdf.readthedocs.io/en/latest/?badge=latest)
+      
 # restframework-rdf
 
-A django app for integration between RDF and django rest framework.
+Django apps for integration between Resource Description Framework (RDF) and [django REST framework](https://www.django-rest-framework.org/). The repository contains two django apps, `rdf` for general RDF functionality and `sparql` to add views for SPARQL queries. The functionality is intended as generic and useful for any project that intends to expose an RDF database through a django REST framework API.
+
+These apps were originally developed within the [read-it interface](https://github.com/UUDigitalHumanitieslab/readit-interface). The code was moved to this independent repository so it could be used in another application, [EDPOP](https://github.com/UUDigitalHumanitieslab/EDPOP).
+
+Both of these applications are in active development; as such, this repository may see further updates to serve the needs of different applications. We welcome contributions to make the package more widely applicable.
+
+However, be advised that this repository was primarily developed to be used in our own applications. It may not have the level of documentation that you would expect from a public-facing package. At the very least, the documentation will assume that you have basic familiarity with both RDF and django REST framework. 
 
 ## Quick start
 
 Follow the [getting started guide](/docs/getting-started.md) to use the app in a django project.
+
+Usage documentation is available in the [documentation directory](/docs/) or [read the docs](https://restframework-rdf.readthedocs.io/en/latest/getting-started/)
 
 ## Development and unit tests
 
