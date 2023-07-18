@@ -13,3 +13,6 @@ authors:
 license: BSD-3-Clause
 repository-code: https://github.com/UUDigitalHumanitieslab/restframework-rdf
 version: 1.0.1
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.8158686
