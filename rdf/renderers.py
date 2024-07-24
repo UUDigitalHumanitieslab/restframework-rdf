@@ -22,7 +22,14 @@ class RDFLibRenderer(BaseRenderer):
     """
 
     def render(self, graph, media_type=None, renderer_context=None):
-        return graph.serialize(**self.rdflib_args)
+        view = None
+        if renderer_context is not None and 'view' in renderer_context:
+            view = renderer_context['view']
+        rdflib_args = self.get_rdflib_args(view=view)
+        return graph.serialize(**rdflib_args)
+
+    def get_rdflib_args(self, **kwargs):
+        return self.rdflib_args
 
 
 class TurtleRenderer(RDFLibRenderer):
@@ -44,9 +51,18 @@ class RdfXMLRenderer(RDFLibRenderer):
 class JsonLdRenderer(RDFLibRenderer):
     media_type = 'application/ld+json'
     format = 'jsonld'
-    rdflib_args = {
-        'format': 'json-ld',
-    }
+    json_ld_context = None
+
+    def get_rdflib_args(self, view=None):
+        args = {
+            'format': 'json-ld',
+        }
+        if (
+                hasattr(view, "json_ld_context")
+                and view.json_ld_context is not None
+        ):
+            args['context'] = view.json_ld_context
+        return args
 
 
 class NTriplesRenderer(RDFLibRenderer):

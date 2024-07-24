@@ -90,7 +90,13 @@ class RDFView(APIView):
     Either set a static `graph` member function or override
     `get_graph` to compute the graph from the request.
 
-    For now, only Turtle output and JSON-LD input is supported.
+    By default, this view supports Turtle as output and JSON-LD as input,
+    but this can be overridden by providing custom values for
+    `renderer_classes` and `parser_classes`.
+
+    Only `JsonLdRenderer` as an alternative renderer class has been tested.
+    If using this, JSON LD context may be provided by setting the
+    `json_ld_context` property (generally a `dict`).
     """
     renderer_classes = (TurtleRenderer,)
     parser_classes = (JSONLDParser,)
