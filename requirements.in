@@ -1,5 +1,5 @@
 djangorestframework
-django>=3.2,<4
+django>=3.2,<5
 rdflib>6
 pytest
 pytest-django
