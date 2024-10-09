@@ -16,7 +16,7 @@ click==8.1.7
     #   mkdocstrings
 colorama==0.4.6
     # via griffe
-django==3.2.25
+django==4.2.16
     # via
     #   -r requirements.in
     #   djangorestframework
@@ -89,8 +89,6 @@ pytest-django==4.8.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via ghp-import
-pytz==2024.1
-    # via django
 pyyaml==6.0.1
     # via
     #   mkdocs
